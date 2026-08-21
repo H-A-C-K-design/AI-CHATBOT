@@ -207,6 +207,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             className="sidebar-toggle-btn"
             type="button"
             aria-label="Open sidebar"
+            id="btn-sidebar-toggle"
           >
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M2 4H14M2 8H14M2 12H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -216,10 +217,23 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           <h1 className="chat-header-title">
             {activeConversationId
               ? conversations.find((c) => c.id === activeConversationId)?.title || 'Chat'
-              : 'New chat'}
+              : 'NEXORA AI'}
           </h1>
 
-          <ThemeToggle />
+          <div className="chat-header-actions">
+            <button
+              onClick={handleNewChat}
+              className="mobile-new-chat-btn"
+              type="button"
+              aria-label="New chat"
+              title="New chat"
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Pass handlers to children via React.cloneElement */}
