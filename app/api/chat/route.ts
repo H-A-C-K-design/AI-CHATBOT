@@ -9,6 +9,7 @@ import { checkRateLimit, rateLimitHeaders } from '@/lib/security/rate-limiter';
 import { createConversation, getConversation, touchConversation, setConversationTitle } from '@/lib/database/conversations';
 import { createMessage, getRecentMessages } from '@/lib/database/messages';
 import { sendToN8n, N8nError } from '@/lib/n8n/client';
+import { sendToOpenAI } from '@/lib/ai/openai';
 import type { ChatResponse, ApiError } from '@/types';
 
 export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse | ApiError>> {
@@ -93,16 +94,38 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       role: m.role,
       content: m.content,
     }));
+    // 8. Generate AI Response (n8n Agentic AI workflow)
+    let aiResponseText = '';
+    let aiResponseTitle: string | undefined;
 
-    // 8. Send to n8n
-    const n8nResponse = await sendToN8n({
-      conversationId,
-      message,
-      history,
-    });
+    if (process.env.N8N_WEBHOOK_URL) {
+      const n8nResult = await sendToN8n({
+        conversationId,
+        message,
+        history,
+      });
+      aiResponseText = n8nResult.response;
+      aiResponseTitle = n8nResult.title;
+    } else if (process.env.OPENAI_API_KEY) {
+      const openAiResult = await sendToOpenAI(message, history);
+      aiResponseText = openAiResult.response;
+      aiResponseTitle = openAiResult.title;
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'AI_NOT_CONFIGURED',
+            message:
+              'No AI provider configured. Please set OPENAI_API_KEY or N8N_WEBHOOK_URL in .env.local.',
+          },
+        },
+        { status: 500 }
+      );
+    }
 
     // 9. Sanitize and persist assistant message
-    const assistantContent = sanitizeAIOutput(n8nResponse.response);
+    const assistantContent = sanitizeAIOutput(aiResponseText);
     const assistantMessage = await createMessage(conversationId, 'assistant', assistantContent);
 
     // 10. Update conversation timestamp
@@ -111,7 +134,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     // 11. Auto-generate title for new conversations
     let generatedTitle: string | undefined;
     if (isNewConversation) {
-      const title = n8nResponse.title || message.substring(0, 100);
+      const title = aiResponseTitle || message.substring(0, 100);
       await setConversationTitle(conversationId, title);
       generatedTitle = title;
     }

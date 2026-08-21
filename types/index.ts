@@ -74,6 +74,7 @@ export type ErrorCode =
   | 'CONVERSATION_NOT_FOUND'
   | 'INTERNAL_ERROR'
   | 'N8N_ERROR'
+  | 'AI_NOT_CONFIGURED'
   | 'MESSAGE_TOO_LONG'
   | 'REQUEST_TOO_LARGE';
 
