@@ -75,6 +75,8 @@ export function LoginForm() {
         setError('Password is too weak. Please use at least 6 characters.');
       } else if (error.code === 'auth/invalid-email') {
         setError('Please enter a valid email address.');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError('Email/Password is not enabled in your Firebase Console. Please enable it in Authentication > Sign-in method.');
       } else {
         setError(error.message || 'Authentication failed. Please check your credentials.');
       }
