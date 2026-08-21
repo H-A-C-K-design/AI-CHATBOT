@@ -1,23 +1,32 @@
 // ============================================================
-// POST /api/chat — Main Chat Endpoint
+// POST /api/chat — Main Chat Endpoint (Powered by OpenAI)
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest, AuthError } from '@/lib/auth/session';
 import { chatRequestSchema, validateRequestSize } from '@/lib/validation/chat';
 import { sanitizeInput, sanitizeAIOutput } from '@/lib/validation/sanitize';
 import { checkRateLimit, rateLimitHeaders } from '@/lib/security/rate-limiter';
-import { createConversation, getConversation, touchConversation, setConversationTitle } from '@/lib/database/conversations';
+import {
+  createConversation,
+  getConversation,
+  touchConversation,
+  setConversationTitle,
+} from '@/lib/database/conversations';
 import { createMessage, getRecentMessages } from '@/lib/database/messages';
-import { sendToN8n, N8nError } from '@/lib/n8n/client';
 import { sendToOpenAI } from '@/lib/ai/openai';
 import type { ChatResponse, ApiError } from '@/types';
 
-export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse | ApiError>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<ChatResponse | ApiError>> {
   try {
     // 1. Validate request size
     if (!validateRequestSize(request.headers.get('content-length'))) {
       return NextResponse.json(
-        { success: false, error: { code: 'REQUEST_TOO_LARGE', message: 'Request body is too large.' } },
+        {
+          success: false,
+          error: { code: 'REQUEST_TOO_LARGE', message: 'Request body is too large.' },
+        },
         { status: 413 }
       );
     }
@@ -30,7 +39,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     const rateResult = checkRateLimit(userId);
     if (!rateResult.allowed) {
       return NextResponse.json(
-        { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests. Please wait before trying again.' } },
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMITED',
+            message: 'Too many requests. Please wait before trying again.',
+          },
+        },
         { status: 429, headers: rateLimitHeaders(rateResult) }
       );
     }
@@ -41,46 +56,54 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       body = await request.json();
     } catch {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON in request body.' } },
+        {
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON in request body.' },
+        },
         { status: 400 }
       );
     }
 
     const parseResult = chatRequestSchema.safeParse(body);
     if (!parseResult.success) {
-      const firstError = parseResult.error.issues[0]?.message || 'Invalid request.';
+      const issue = parseResult.error.issues?.[0];
+      const errorMsg = issue?.message || 'Invalid request payload.';
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: firstError } },
+        {
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: errorMsg },
+        },
         { status: 400 }
       );
     }
 
-    const { conversationId: inputConvId, message: rawMessage } = parseResult.data;
+    const { message: rawMessage, conversationId: requestedConvId } = parseResult.data;
     const message = sanitizeInput(rawMessage);
 
-    if (message.length === 0) {
-      return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Message must not be empty.' } },
-        { status: 400 }
-      );
-    }
-
-    // 5. Load or create conversation
+    // 5. Conversation management
     let conversationId: string;
     let isNewConversation = false;
 
-    if (inputConvId) {
-      const conversation = await getConversation(userId, inputConvId);
+    if (requestedConvId) {
+      const conversation = await getConversation(userId, requestedConvId);
       if (!conversation) {
         return NextResponse.json(
-          { success: false, error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found.' } },
+          {
+            success: false,
+            error: {
+              code: 'CONVERSATION_NOT_FOUND',
+              message: 'Conversation not found.',
+            },
+          },
           { status: 404 }
         );
       }
       conversationId = conversation.id;
     } else {
       // Create a new conversation
-      const newConv = await createConversation(userId, { title: 'New conversation' });
+      const newConv = await createConversation(userId, {
+        title: 'New conversation',
+      });
       conversationId = newConv.id;
       isNewConversation = true;
     }
@@ -94,39 +117,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       role: m.role,
       content: m.content,
     }));
-    // 8. Generate AI Response (OpenAI API primary, with n8n fallback)
-    let aiResponseText = '';
-    let aiResponseTitle: string | undefined;
 
-    if (process.env.OPENAI_API_KEY) {
-      const openAiResult = await sendToOpenAI(message, history);
-      aiResponseText = openAiResult.response;
-      aiResponseTitle = openAiResult.title;
-    } else if (process.env.N8N_WEBHOOK_URL) {
-      const n8nResult = await sendToN8n({
-        conversationId,
-        message,
-        history,
-      });
-      aiResponseText = n8nResult.response;
-      aiResponseTitle = n8nResult.title;
-    } else {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'AI_NOT_CONFIGURED',
-            message:
-              'No AI provider configured. Please set OPENAI_API_KEY or N8N_WEBHOOK_URL in .env.local.',
-          },
-        },
-        { status: 500 }
-      );
-    }
+    // 8. Generate AI Response with OpenAI (gpt-4o-mini)
+    const openAiResult = await sendToOpenAI(message, history);
+    const aiResponseText = openAiResult.response;
+    const aiResponseTitle = openAiResult.title;
 
     // 9. Sanitize and persist assistant message
     const assistantContent = sanitizeAIOutput(aiResponseText);
-    const assistantMessage = await createMessage(conversationId, 'assistant', assistantContent);
+    const assistantMessage = await createMessage(
+      conversationId,
+      'assistant',
+      assistantContent
+    );
 
     // 10. Update conversation timestamp
     await touchConversation(conversationId);
@@ -147,7 +150,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       ...(generatedTitle && { title: generatedTitle }),
     };
 
-    return NextResponse.json(response, { headers: rateLimitHeaders(rateResult) });
+    return NextResponse.json(response, {
+      headers: rateLimitHeaders(rateResult),
+    });
   } catch (error) {
     // Auth errors
     if (error instanceof AuthError) {
@@ -157,18 +162,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       );
     }
 
-    // n8n errors
-    if (error instanceof N8nError) {
-      return NextResponse.json(
-        { success: false, error: { code: 'N8N_ERROR', message: error.message } },
-        { status: 502 }
-      );
-    }
+    // OpenAI or custom error message
+    const errMessage = (error as Error).message || 'An unexpected error occurred.';
+    console.error('[/api/chat] Error:', errMessage);
 
-    // Unknown errors — do not leak details
-    console.error('[/api/chat] Unhandled error:', (error as Error).message);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred. Please try again.' } },
+      {
+        success: false,
+        error: { code: 'CHAT_REQUEST_FAILED', message: errMessage },
+      },
       { status: 500 }
     );
   }

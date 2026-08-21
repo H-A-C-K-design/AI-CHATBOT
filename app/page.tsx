@@ -231,9 +231,9 @@ async def authenticate_jwt(request: Request):
                 <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h3 className="feature-title">n8n Workflow Engine</h3>
+            <h3 className="feature-title">OpenAI GPT-4o Engine</h3>
             <p className="feature-desc">
-              Connected directly to n8n AI workflows for custom reasoning, prompt chains, database lookups, and automated webhook pipelines.
+              Direct connection to OpenAI state-of-the-art models for lightning-fast reasoning, context awareness, and instant code generation.
             </p>
           </div>
 
