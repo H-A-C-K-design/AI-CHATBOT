@@ -97,11 +97,10 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
 # Firebase Admin (private — from service account JSON)
 FIREBASE_ADMIN_PROJECT_ID=your-project-id
 FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_ADMIN_PRIVATE_KEY="your-private-key-string"
 
-# n8n (private)
-N8N_WEBHOOK_URL=https://your-n8n.com/webhook/nexusai-chat
-N8N_WEBHOOK_SECRET=your-webhook-secret
+# OpenAI API (private)
+OPENAI_API_KEY=your-openai-api-key
 ```
 
 ### 6. Run Development Server

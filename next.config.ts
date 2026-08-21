@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Hide server technology headers
+  poweredByHeader: false,
+
+  // Disable client source maps so no source code can be inspected in DevTools
+  productionBrowserSourceMaps: false,
+
   // Allow Firebase/Google/GitHub avatar images
   images: {
     remotePatterns: [
@@ -19,7 +25,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Security headers
+  // HTTP Security Headers
   async headers() {
     return [
       {
