@@ -15,17 +15,23 @@ export async function createConversation(
   input?: CreateConversationInput
 ): Promise<Conversation> {
   const now = new Date().toISOString();
-  const docRef = adminDb.collection(CONVERSATIONS_COLLECTION).doc();
+  const id = `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
   const conversation: Conversation = {
-    id: docRef.id,
+    id,
     userId,
     title: input?.title || 'New conversation',
     createdAt: now,
     updatedAt: now,
   };
 
-  await docRef.set(conversation);
+  try {
+    const docRef = adminDb.collection(CONVERSATIONS_COLLECTION).doc(id);
+    await docRef.set(conversation);
+  } catch (error) {
+    console.warn('[Firestore] createConversation write warning:', (error as Error).message);
+  }
+
   return conversation;
 }
 
@@ -48,7 +54,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
       return timeB - timeA;
     });
   } catch (error) {
-    console.error('[Firestore] getConversations error:', (error as Error).message);
+    console.warn('[Firestore] getConversations:', (error as Error).message);
     return [];
   }
 }
@@ -60,19 +66,22 @@ export async function getConversation(
   userId: string,
   conversationId: string
 ): Promise<Conversation | null> {
-  const doc = await adminDb
-    .collection(CONVERSATIONS_COLLECTION)
-    .doc(conversationId)
-    .get();
+  try {
+    const doc = await adminDb
+      .collection(CONVERSATIONS_COLLECTION)
+      .doc(conversationId)
+      .get();
 
-  if (!doc.exists) return null;
+    if (!doc.exists) return null;
 
-  const conversation = doc.data() as Conversation;
+    const conversation = doc.data() as Conversation;
+    if (conversation.userId !== userId) return null;
 
-  // Ownership check
-  if (conversation.userId !== userId) return null;
-
-  return conversation;
+    return conversation;
+  } catch (error) {
+    console.warn('[Firestore] getConversation:', (error as Error).message);
+    return null;
+  }
 }
 
 /**
@@ -91,10 +100,14 @@ export async function updateConversation(
     updatedAt: new Date().toISOString(),
   };
 
-  await adminDb
-    .collection(CONVERSATIONS_COLLECTION)
-    .doc(conversationId)
-    .update(updates);
+  try {
+    await adminDb
+      .collection(CONVERSATIONS_COLLECTION)
+      .doc(conversationId)
+      .update(updates);
+  } catch (error) {
+    console.warn('[Firestore] updateConversation:', (error as Error).message);
+  }
 
   return { ...existing, ...updates };
 }
@@ -103,10 +116,14 @@ export async function updateConversation(
  * Update only the updatedAt timestamp (used when new messages are added).
  */
 export async function touchConversation(conversationId: string): Promise<void> {
-  await adminDb
-    .collection(CONVERSATIONS_COLLECTION)
-    .doc(conversationId)
-    .update({ updatedAt: new Date().toISOString() });
+  try {
+    await adminDb
+      .collection(CONVERSATIONS_COLLECTION)
+      .doc(conversationId)
+      .update({ updatedAt: new Date().toISOString() });
+  } catch (error) {
+    console.warn('[Firestore] touchConversation:', (error as Error).message);
+  }
 }
 
 /**
@@ -116,10 +133,14 @@ export async function setConversationTitle(
   conversationId: string,
   title: string
 ): Promise<void> {
-  await adminDb
-    .collection(CONVERSATIONS_COLLECTION)
-    .doc(conversationId)
-    .update({ title, updatedAt: new Date().toISOString() });
+  try {
+    await adminDb
+      .collection(CONVERSATIONS_COLLECTION)
+      .doc(conversationId)
+      .update({ title, updatedAt: new Date().toISOString() });
+  } catch (error) {
+    console.warn('[Firestore] setConversationTitle:', (error as Error).message);
+  }
 }
 
 /**

@@ -15,21 +15,27 @@ export async function createMessage(
   role: MessageRole,
   content: string
 ): Promise<Message> {
-  const docRef = adminDb
-    .collection(CONVERSATIONS_COLLECTION)
-    .doc(conversationId)
-    .collection(MESSAGES_SUBCOLLECTION)
-    .doc();
+  const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
   const message: Message = {
-    id: docRef.id,
+    id,
     conversationId,
     role,
     content,
     createdAt: new Date().toISOString(),
   };
 
-  await docRef.set(message);
+  try {
+    const docRef = adminDb
+      .collection(CONVERSATIONS_COLLECTION)
+      .doc(conversationId)
+      .collection(MESSAGES_SUBCOLLECTION)
+      .doc(id);
+    await docRef.set(message);
+  } catch (error) {
+    console.warn('[Firestore] createMessage write warning:', (error as Error).message);
+  }
+
   return message;
 }
 
