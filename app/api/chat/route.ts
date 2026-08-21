@@ -94,11 +94,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       role: m.role,
       content: m.content,
     }));
-    // 8. Generate AI Response (n8n Agentic AI workflow)
+    // 8. Generate AI Response (OpenAI API primary, with n8n fallback)
     let aiResponseText = '';
     let aiResponseTitle: string | undefined;
 
-    if (process.env.N8N_WEBHOOK_URL) {
+    if (process.env.OPENAI_API_KEY) {
+      const openAiResult = await sendToOpenAI(message, history);
+      aiResponseText = openAiResult.response;
+      aiResponseTitle = openAiResult.title;
+    } else if (process.env.N8N_WEBHOOK_URL) {
       const n8nResult = await sendToN8n({
         conversationId,
         message,
@@ -106,10 +110,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       });
       aiResponseText = n8nResult.response;
       aiResponseTitle = n8nResult.title;
-    } else if (process.env.OPENAI_API_KEY) {
-      const openAiResult = await sendToOpenAI(message, history);
-      aiResponseText = openAiResult.response;
-      aiResponseTitle = openAiResult.title;
     } else {
       return NextResponse.json(
         {
