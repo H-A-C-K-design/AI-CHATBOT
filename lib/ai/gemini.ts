@@ -10,10 +10,10 @@ export interface GeminiResponse {
 const SYSTEM_INSTRUCTION = `You are NEXORA AI, an intelligent, professional AI coding assistant and developer workspace companion.
 - Provide clean, production-grade code with error handling, type definitions, and best practices.
 - Use markdown formatting with language identifiers for all code blocks (e.g. \`\`\`python, \`\`\`typescript, \`\`\`sql).
-- Be concise, accurate, and direct.`;
+- Be concise, accurate, and direct. Explain key decisions briefly.`;
 
 /**
- * Send messages to Google Gemini API (gemini-2.0-flash / gemini-1.5-flash).
+ * Send messages to Google Gemini API (gemini-3.6-flash / gemini-2.5-flash).
  */
 export async function sendToGemini(
   userMessage: string,
@@ -22,7 +22,7 @@ export async function sendToGemini(
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured.');
+    throw new Error('GEMINI_API_KEY is not configured in .env.local.');
   }
 
   const contents = [
@@ -40,7 +40,7 @@ export async function sendToGemini(
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
   try {
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
@@ -71,7 +71,9 @@ export async function sendToGemini(
 
     const data = await response.json();
     const candidate = data?.candidates?.[0];
-    const text = candidate?.content?.parts?.[0]?.text;
+    const parts = candidate?.content?.parts || [];
+    const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);
+    const text = textPart?.text || parts[0]?.text;
 
     if (!text) {
       throw new Error('Received an empty response from Gemini.');
