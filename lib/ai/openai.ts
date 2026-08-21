@@ -61,9 +61,10 @@ export async function sendToOpenAI(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMsg = errorData?.error?.message || `OpenAI API returned status ${response.status}`;
+      const errorMsg =
+        errorData?.error?.message || `OpenAI API returned error ${response.status}`;
       console.error('[OpenAI] API error:', errorMsg);
-      throw new Error('AI service error. Please verify your OpenAI API key and quota.');
+      throw new Error(errorMsg);
     }
 
     const data = await response.json();

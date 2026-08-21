@@ -14,6 +14,7 @@ import {
 } from '@/lib/database/conversations';
 import { createMessage, getRecentMessages } from '@/lib/database/messages';
 import { sendToOpenAI } from '@/lib/ai/openai';
+import { sendToGemini } from '@/lib/ai/gemini';
 import type { ChatResponse, ApiError } from '@/types';
 
 export async function POST(
@@ -118,10 +119,32 @@ export async function POST(
       content: m.content,
     }));
 
-    // 8. Generate AI Response with OpenAI (gpt-4o-mini)
-    const openAiResult = await sendToOpenAI(message, history);
-    const aiResponseText = openAiResult.response;
-    const aiResponseTitle = openAiResult.title;
+    // 8. Generate AI Response (OpenAI or Gemini)
+    let aiResponseText = '';
+    let aiResponseTitle: string | undefined;
+
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const openAiResult = await sendToOpenAI(message, history);
+        aiResponseText = openAiResult.response;
+        aiResponseTitle = openAiResult.title;
+      } catch (err: unknown) {
+        if (process.env.GEMINI_API_KEY) {
+          console.warn('[AI] OpenAI failed, falling back to Gemini:', (err as Error).message);
+          const geminiResult = await sendToGemini(message, history);
+          aiResponseText = geminiResult.response;
+          aiResponseTitle = geminiResult.title;
+        } else {
+          throw err;
+        }
+      }
+    } else if (process.env.GEMINI_API_KEY) {
+      const geminiResult = await sendToGemini(message, history);
+      aiResponseText = geminiResult.response;
+      aiResponseTitle = geminiResult.title;
+    } else {
+      throw new Error('No AI API key configured. Please add OPENAI_API_KEY or GEMINI_API_KEY to .env.local.');
+    }
 
     // 9. Sanitize and persist assistant message
     const assistantContent = sanitizeAIOutput(aiResponseText);

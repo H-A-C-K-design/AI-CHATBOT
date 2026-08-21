@@ -98,12 +98,13 @@ export function ChatContainer({
       // Add the real assistant message
       setMessages((prev) => [...prev, chatResponse.message]);
       onNewMessage();
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         // User cancelled — not an error
         return;
       }
-      setError('Failed to send message. Please try again.');
+      const msg = (err as Error)?.message || 'Failed to send message. Please try again.';
+      setError(msg);
       setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
     } finally {
       setIsLoading(false);
