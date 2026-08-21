@@ -74,11 +74,19 @@ export function ChatContainer({
         signal: abortControllerRef.current.signal,
       });
 
-      const data: ChatResponse | ApiError = await response.json();
+      const rawText = await response.text();
+      let data: ChatResponse | ApiError;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        setError(rawText || `Server returned error (${response.status})`);
+        setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
+        return;
+      }
 
       if (!data.success) {
         const apiError = data as ApiError;
-        setError(apiError.error.message);
+        setError(apiError.error?.message || 'Failed to generate response.');
         // Remove the optimistic message on error
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
         return;

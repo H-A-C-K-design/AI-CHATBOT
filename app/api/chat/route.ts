@@ -87,19 +87,12 @@ export async function POST(
 
     if (requestedConvId) {
       const conversation = await getConversation(userId, requestedConvId);
-      if (!conversation) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: 'CONVERSATION_NOT_FOUND',
-              message: 'Conversation not found.',
-            },
-          },
-          { status: 404 }
-        );
+      if (conversation) {
+        conversationId = conversation.id;
+      } else {
+        // Fallback: assign requested ID gracefully without blocking multi-turn chat
+        conversationId = requestedConvId;
       }
-      conversationId = conversation.id;
     } else {
       // Create a new conversation
       const newConv = await createConversation(userId, {
@@ -119,31 +112,31 @@ export async function POST(
       content: m.content,
     }));
 
-    // 8. Generate AI Response (OpenAI or Gemini)
+    // 8. Generate AI Response (Prioritize active Gemini or OpenAI)
     let aiResponseText = '';
     let aiResponseTitle: string | undefined;
 
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
       try {
-        const openAiResult = await sendToOpenAI(message, history);
-        aiResponseText = openAiResult.response;
-        aiResponseTitle = openAiResult.title;
+        const geminiResult = await sendToGemini(message, history);
+        aiResponseText = geminiResult.response;
+        aiResponseTitle = geminiResult.title;
       } catch (err: unknown) {
-        if (process.env.GEMINI_API_KEY) {
-          console.warn('[AI] OpenAI failed, falling back to Gemini:', (err as Error).message);
-          const geminiResult = await sendToGemini(message, history);
-          aiResponseText = geminiResult.response;
-          aiResponseTitle = geminiResult.title;
+        if (process.env.OPENAI_API_KEY) {
+          console.warn('[AI] Gemini error, trying OpenAI:', (err as Error).message);
+          const openAiResult = await sendToOpenAI(message, history);
+          aiResponseText = openAiResult.response;
+          aiResponseTitle = openAiResult.title;
         } else {
           throw err;
         }
       }
-    } else if (process.env.GEMINI_API_KEY) {
-      const geminiResult = await sendToGemini(message, history);
-      aiResponseText = geminiResult.response;
-      aiResponseTitle = geminiResult.title;
+    } else if (process.env.OPENAI_API_KEY) {
+      const openAiResult = await sendToOpenAI(message, history);
+      aiResponseText = openAiResult.response;
+      aiResponseTitle = openAiResult.title;
     } else {
-      throw new Error('No AI API key configured. Please add OPENAI_API_KEY or GEMINI_API_KEY to .env.local.');
+      throw new Error('No AI API key configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in .env.local.');
     }
 
     // 9. Sanitize and persist assistant message
