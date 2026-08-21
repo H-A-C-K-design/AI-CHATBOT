@@ -88,16 +88,20 @@ export function LoginForm() {
     setError(null);
     setSuccessMessage(null);
     try {
-      await signInWithGoogle();
-      router.push('/chat');
+      const user = await signInWithGoogle();
+      if (user) {
+        router.push('/chat');
+      }
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         setError(null);
       } else if (error.code === 'auth/account-exists-with-different-credential') {
-        setError('An account already exists with a different sign-in method.');
+        setError('An account already exists with this email using a different sign-in provider.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized in Firebase Console > Authentication > Settings.');
       } else {
-        setError(error.message || 'Failed to sign in with Google.');
+        setError('Unable to complete Google sign-in. Please try again or use email sign-in.');
       }
     } finally {
       setLoading(null);
@@ -109,16 +113,20 @@ export function LoginForm() {
     setError(null);
     setSuccessMessage(null);
     try {
-      await signInWithGitHub();
-      router.push('/chat');
+      const user = await signInWithGitHub();
+      if (user) {
+        router.push('/chat');
+      }
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         setError(null);
       } else if (error.code === 'auth/account-exists-with-different-credential') {
-        setError('An account already exists with a different sign-in method.');
+        setError('An account already exists with this email using a different sign-in provider.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized in Firebase Console > Authentication > Settings.');
       } else {
-        setError(error.message || 'Failed to sign in with GitHub.');
+        setError('Unable to complete GitHub sign-in. Please verify your OAuth settings.');
       }
     } finally {
       setLoading(null);

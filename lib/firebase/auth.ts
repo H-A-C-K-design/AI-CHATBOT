@@ -5,6 +5,8 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -19,6 +21,8 @@ import { auth } from './config';
 
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
+
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 /**
  * Sign in with Email and Password.
@@ -47,19 +51,58 @@ export async function sendPasswordReset(email: string): Promise<void> {
 }
 
 /**
- * Sign in with Google OAuth popup.
+ * Sign in with Google OAuth popup, with auto-fallback to redirect if popup is blocked.
  */
-export async function signInWithGoogle(): Promise<User> {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+export async function signInWithGoogle(): Promise<User | null> {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error: any) {
+    if (
+      error?.code === 'auth/popup-blocked' ||
+      error?.code === 'auth/popup-closed-by-user' ||
+      error?.code === 'auth/cancelled-popup-request'
+    ) {
+      console.warn('[Auth] Popup blocked or closed, falling back to signInWithRedirect...');
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
- * Sign in with GitHub OAuth popup.
+ * Sign in with GitHub OAuth popup, with auto-fallback to redirect if popup is blocked.
  */
-export async function signInWithGitHub(): Promise<User> {
-  const result = await signInWithPopup(auth, githubProvider);
-  return result.user;
+export async function signInWithGitHub(): Promise<User | null> {
+  try {
+    const result = await signInWithPopup(auth, githubProvider);
+    return result.user;
+  } catch (error: any) {
+    if (
+      error?.code === 'auth/popup-blocked' ||
+      error?.code === 'auth/popup-closed-by-user' ||
+      error?.code === 'auth/cancelled-popup-request'
+    ) {
+      console.warn('[Auth] Popup blocked or closed, falling back to signInWithRedirect...');
+      await signInWithRedirect(auth, githubProvider);
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Check if the user is returning from a redirect sign-in.
+ */
+export async function checkRedirectResult(): Promise<User | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    return result?.user || null;
+  } catch (error) {
+    console.error('[Auth] Redirect result error:', error);
+    return null;
+  }
 }
 
 /**

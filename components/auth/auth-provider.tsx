@@ -4,7 +4,7 @@
 // Auth Context Provider
 // ============================================================
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { onAuthStateChanged, getIdToken } from '@/lib/firebase/auth';
+import { onAuthStateChanged, getIdToken, checkRedirectResult } from '@/lib/firebase/auth';
 import type { User } from 'firebase/auth';
 
 interface AuthContextValue {
@@ -27,6 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if returning from OAuth redirect flow
+    checkRedirectResult().then((redirectUser) => {
+      if (redirectUser) {
+        setUser(redirectUser);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
