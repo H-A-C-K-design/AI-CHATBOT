@@ -51,14 +51,17 @@ export async function createMessage(
     cache.push(message);
   }
 
-  // 2. Persist to Firestore DB (fault-tolerant)
+  // 2. Persist to Firestore DB (fault-tolerant with clean document payload)
   try {
+    const cleanDoc = Object.fromEntries(
+      Object.entries(message).filter(([_, v]) => v !== undefined)
+    );
     const docRef = adminDb
       .collection(CONVERSATIONS_COLLECTION)
       .doc(conversationId)
       .collection(MESSAGES_SUBCOLLECTION)
       .doc(id);
-    await docRef.set(message);
+    await docRef.set(cleanDoc);
   } catch (error) {
     console.warn('[Firestore] createMessage write notice:', (error as Error).message);
   }

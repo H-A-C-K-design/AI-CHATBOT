@@ -54,6 +54,11 @@ export const adminDb = new Proxy({} as Firestore, {
   get(_, prop) {
     if (!_adminDb) {
       _adminDb = getFirestore(getAdminAppInstance());
+      try {
+        _adminDb.settings({ ignoreUndefinedProperties: true });
+      } catch {
+        // settings already applied
+      }
     }
     const val = (_adminDb as unknown as Record<string, unknown>)[prop as string];
     if (typeof val === 'function') {

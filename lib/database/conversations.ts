@@ -193,9 +193,9 @@ export async function touchConversation(
     await adminDb
       .collection(CONVERSATIONS_COLLECTION)
       .doc(conversationId)
-      .update(updates);
+      .set(updates, { merge: true });
   } catch (error) {
-    console.warn('[Firestore] touchConversation:', (error as Error).message);
+    console.warn('[Firestore] touchConversation notice:', (error as Error).message);
   }
 }
 
@@ -219,9 +219,9 @@ export async function setConversationTitle(
     await adminDb
       .collection(CONVERSATIONS_COLLECTION)
       .doc(conversationId)
-      .update({ title, updatedAt: new Date().toISOString() });
+      .set({ title, updatedAt: new Date().toISOString() }, { merge: true });
   } catch (error) {
-    console.warn('[Firestore] setConversationTitle:', (error as Error).message);
+    console.warn('[Firestore] setConversationTitle notice:', (error as Error).message);
   }
 }
 
