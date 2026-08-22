@@ -54,6 +54,12 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     description: 'Dispatches background automation workflows and webhook micro-events.',
     category: 'automation',
   },
+  {
+    name: 'knowledge_retriever',
+    label: 'Research Paper Deep Analyzer',
+    description: 'Performs dual-model independent analysis (Gemini + OpenAI) on research papers and preprints.',
+    category: 'data',
+  },
 ];
 
 /**

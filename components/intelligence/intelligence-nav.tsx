@@ -82,6 +82,7 @@ export function IntelligenceNav({
 
   const navLinks = [
     { href: '/intelligence', label: 'Overview' },
+    { href: '/intelligence/research-analyzer', label: 'Paper Analyzer 📄🔬' },
     { href: '/intelligence/research', label: 'Research Trends' },
     { href: '/intelligence/patents', label: 'Patent Watch' },
     { href: '/intelligence/competitors', label: 'Competitor Watch' },

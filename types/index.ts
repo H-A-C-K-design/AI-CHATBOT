@@ -276,6 +276,8 @@ export interface MessagesListResponse {
   messages: Message[];
 }
 
-// --- Re-export Intelligence & Agent Types ---
+// --- Re-export Intelligence, Agent, Research & Evaluation Types ---
 export * from './intelligence';
 export * from './agent';
+export * from './research-analysis';
+export * from './evaluation';
