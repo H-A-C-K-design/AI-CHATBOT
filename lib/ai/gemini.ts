@@ -40,36 +40,58 @@ export async function sendToGemini(
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
   try {
-    const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const requestedModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+    const fallbackModels = [
+      requestedModel,
+      'gemini-3.6-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash',
+    ];
+    // Deduplicate
+    const modelsToTry = Array.from(new Set(fallbackModels));
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_INSTRUCTION }],
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4000,
-        },
-      }),
-      signal: controller.signal,
-    });
+    let lastError: Error | null = null;
+    let data: any = null;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMsg =
-        errorData?.error?.message || `Gemini API returned error ${response.status}`;
-      console.error('[Gemini] API error:', errorMsg);
-      throw new Error(errorMsg);
+    for (const model of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: SYSTEM_INSTRUCTION }],
+            },
+            contents,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 4000,
+            },
+          }),
+          signal: controller.signal,
+        });
+
+        if (response.ok) {
+          data = await response.json();
+          break;
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMsg =
+            errorData?.error?.message || `Gemini API returned error ${response.status}`;
+          lastError = new Error(errorMsg);
+        }
+      } catch (err) {
+        lastError = err as Error;
+      }
     }
 
-    const data = await response.json();
+    if (!data) {
+      throw lastError || new Error('Failed to generate response from Gemini.');
+    }
+
     const candidate = data?.candidates?.[0];
     const parts = candidate?.content?.parts || [];
     const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);

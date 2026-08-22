@@ -89,52 +89,65 @@ export async function POST(
     const { message: rawMessage, conversationId: requestedConvId } = parseResult.data;
     const message = sanitizeInput(rawMessage);
 
-    // 5. Conversation management
-    let conversationId: string;
+    // 5. Conversation management (Fault-tolerant)
+    let conversationId: string = requestedConvId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     let isNewConversation = false;
 
-    if (requestedConvId) {
-      const conversation = await getConversation(userId, requestedConvId);
-      if (conversation) {
-        conversationId = conversation.id;
+    try {
+      if (requestedConvId) {
+        const conversation = await getConversation(userId, requestedConvId);
+        if (conversation) {
+          conversationId = conversation.id;
+        }
       } else {
-        conversationId = requestedConvId;
+        const newConv = await createConversation(userId, {
+          title: 'New conversation',
+        });
+        conversationId = newConv.id;
+        isNewConversation = true;
       }
-    } else {
-      const newConv = await createConversation(userId, {
-        title: 'New conversation',
-      });
-      conversationId = newConv.id;
-      isNewConversation = true;
+    } catch (err) {
+      console.warn('[/api/chat] Conversation management DB warning:', (err as Error).message);
     }
 
-    // 6. Persist user message
-    await createMessage(conversationId, 'user', message);
+    // 6. Persist user message (Fault-tolerant)
+    try {
+      await createMessage(conversationId, 'user', message);
+    } catch (err) {
+      console.warn('[/api/chat] User message persist warning:', (err as Error).message);
+    }
 
     // 7. Context History & Intelligence Intent Retrieval (RAG)
-    const recentMessages = await getRecentMessages(conversationId, 20);
-    const history = recentMessages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    let history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [];
+    try {
+      const recentMessages = await getRecentMessages(conversationId, 20);
+      history = recentMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+    } catch {
+      history = [];
+    }
 
     // Detect if the user query is asking for research, patents, competitor intel, trends, or project monitoring
     const isIntelQuery = isIntelligenceIntent(message);
     let augmentedMessage = message;
 
     if (isIntelQuery) {
-      const [items, projects, trends, alerts] = await Promise.all([
-        getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 8 }),
-        getProjects(userId),
-        calculateAndGetTrends(userId),
-        getAlerts(userId, { status: 'unread', limit: 5 }),
-      ]);
+      try {
+        const [items, projects, trends, alerts] = await Promise.all([
+          getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 8 }),
+          getProjects(userId),
+          calculateAndGetTrends(userId),
+          getAlerts(userId, { status: 'unread', limit: 5 }),
+        ]);
 
-      if (items.length > 0 || projects.length > 0) {
-        const intelContext = formatIntelligenceContext(items, projects, trends, alerts);
-        augmentedMessage = `${message}\n\n${intelContext}`;
-      } else {
-        augmentedMessage = `${message}\n\n[SYSTEM INTELLIGENCE RETRIEVAL: No matching intelligence records found in database for user. Active Projects: 0. Instruct user to create a monitoring project in /intelligence or /projects if inquiring about competitive intelligence.]`;
+        if (items.length > 0 || projects.length > 0) {
+          const intelContext = formatIntelligenceContext(items, projects, trends, alerts);
+          augmentedMessage = `${message}\n\n${intelContext}`;
+        }
+      } catch (err) {
+        console.warn('[/api/chat] Intelligence RAG retrieval warning:', (err as Error).message);
       }
     }
 
@@ -192,24 +205,38 @@ export async function POST(
 
     // 9. Sanitize and persist assistant message
     const assistantContent = sanitizeAIOutput(aiResponseText);
-    const assistantMessage = await createMessage(
+    let assistantMessage: import('@/types').Message = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       conversationId,
-      'assistant',
-      assistantContent
-    );
+      role: 'assistant',
+      content: assistantContent,
+      createdAt: new Date().toISOString(),
+    };
 
-    // 10. Update conversation timestamp
-    await touchConversation(conversationId);
-
-    // 11. Auto-generate title for new conversations
-    let generatedTitle: string | undefined;
-    if (isNewConversation) {
-      const title = aiResponseTitle || message.substring(0, 100);
-      await setConversationTitle(conversationId, title);
-      generatedTitle = title;
+    try {
+      assistantMessage = await createMessage(
+        conversationId,
+        'assistant',
+        assistantContent
+      );
+    } catch (err) {
+      console.warn('[/api/chat] Assistant message persist warning:', (err as Error).message);
     }
 
-    // 12. Return response
+    // 10. Update conversation timestamp & Title (Fault-tolerant)
+    let generatedTitle: string | undefined;
+    try {
+      await touchConversation(conversationId);
+      if (isNewConversation) {
+        const title = aiResponseTitle || message.substring(0, 100);
+        await setConversationTitle(conversationId, title);
+        generatedTitle = title;
+      }
+    } catch {
+      // safe fallback
+    }
+
+    // 11. Return response
     const response: ChatResponse = {
       success: true,
       conversationId,
