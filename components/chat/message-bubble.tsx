@@ -89,8 +89,6 @@ export function MessageBubble({
     setIsEditing(false);
   }, [editContent, message.content, onEditMessage]);
 
-  const modelBadge = message.modelUsed || 'AI Assistant';
-
   return (
     <div className={`message-bubble ${isUser ? 'message-user' : 'message-assistant'}`}>
       {/* Avatar */}
@@ -111,21 +109,11 @@ export function MessageBubble({
 
       {/* Content Body */}
       <div className="message-content-wrapper">
-        {/* Header with Model Badge & Persona */}
+        {/* Header */}
         <div className="message-header-bar">
           <span className="message-role-label">
             {isUser ? 'You' : 'NEXORA'}
           </span>
-          {isAssistant && (
-            <div className="message-meta-tags">
-              <span className="message-model-badge">
-                <span className="model-sparkle">✦</span> {modelBadge}
-              </span>
-              {message.personaUsed && (
-                <span className="message-persona-tag">{message.personaUsed}</span>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Autonomous 5-Stage Agent Task Viewer */}
