@@ -111,6 +111,83 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleQuickStart = async () => {
+    try {
+      setLoading(true);
+      setStatusMsg('Deploying Generative AI & Autonomous Systems monitoring project...');
+      const token = await getToken();
+      if (!token) throw new Error('You must be signed in.');
+
+      const createRes = await fetch('/api/intelligence/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: 'Generative AI & Autonomous Agent Systems',
+          industry: 'Artificial Intelligence & Deep Learning',
+          description: 'Continuous surveillance of large language models, agentic frameworks, multi-agent swarms, and patented neural architectures.',
+          researchTopics: [
+            'Large Language Models',
+            'Autonomous Agents',
+            'Reasoning & Inference',
+            'Transformer Architecture',
+          ],
+          keywords: [
+            'agentic workflows',
+            'mixture of experts',
+            'deepseek r1',
+            'gemini flash',
+            'chain of thought',
+          ],
+          competitors: [
+            'OpenAI',
+            'Anthropic',
+            'Google DeepMind',
+            'Meta AI',
+          ],
+          patentKeywords: [
+            'neural network',
+            'attention mechanism',
+            'reinforcement learning',
+            'distributed inference',
+          ],
+          frequency: 'daily',
+          priorityThreshold: 0.75,
+          notificationPreferences: {
+            email: true,
+            inApp: true,
+            priorityThreshold: 'high',
+          },
+        }),
+      });
+
+      const createData = await createRes.json();
+      if (!createData.success) {
+        throw new Error(createData.error || 'Failed to create starter project.');
+      }
+
+      const projectId = createData.project?.id;
+      if (projectId) {
+        setStatusMsg('Ingesting real publications from arXiv, USPTO & tech news...');
+        await fetch(`/api/intelligence/projects/${projectId}/run`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      await fetchProjects();
+      setStatusMsg('✓ Monitoring project initialized with live data!');
+      setTimeout(() => setStatusMsg(null), 4000);
+    } catch (err) {
+      setStatusMsg((err as Error).message);
+      setTimeout(() => setStatusMsg(null), 4000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="intel-page-container">
       <div className="intel-subpage-header">
@@ -140,9 +217,10 @@ export default function ProjectsPage() {
       ) : projects.length === 0 ? (
         <EmptyState
           title="No monitoring projects configured"
-          description="Create your first monitoring project to begin collecting verified research publications, patent records, competitor updates, and industry intelligence."
+          description="Deploy an instant AI monitoring project with real live data, or configure a custom project with the 7-step wizard."
           actionText="Create Project with Wizard"
           actionHref="/projects/new"
+          onQuickStart={handleQuickStart}
         />
       ) : (
         <div className="projects-grid">

@@ -168,6 +168,76 @@ export function ProjectWizard() {
     'Review & Confirm',
   ];
 
+  const PRESET_TEMPLATES = [
+    {
+      id: 'ai-agents',
+      icon: '🤖',
+      title: 'AI & Autonomous Agents',
+      subtitle: 'LLMs, Swarms, Multi-Agent Coordination',
+      data: {
+        name: 'Generative AI & Autonomous Agent Systems',
+        industry: 'Artificial Intelligence & Deep Learning',
+        description: 'Continuous surveillance of large language models, agentic workflows, multi-agent frameworks, and neural architectures.',
+        researchTopics: ['Large Language Models', 'Autonomous Agents', 'Reasoning & Inference', 'Transformer Architecture'],
+        keywords: ['agentic workflows', 'mixture of experts', 'deepseek r1', 'gemini flash', 'chain of thought'],
+        competitors: ['OpenAI', 'Anthropic', 'Google DeepMind', 'Meta AI'],
+        patentKeywords: ['neural network', 'attention mechanism', 'reinforcement learning', 'distributed inference'],
+      },
+    },
+    {
+      id: 'appsec',
+      icon: '🛡️',
+      title: 'Cybersecurity & AppSec',
+      subtitle: 'Zero Trust, Threat Intel, Exploit Audits',
+      data: {
+        name: 'Enterprise AppSec & Threat Intelligence',
+        industry: 'Cybersecurity',
+        description: 'Continuous tracking of zero-day vulnerabilities, OWASP advisories, authentication exploits, and defensive security patents.',
+        researchTopics: ['Vulnerability Detection', 'Zero Trust Architecture', 'Cryptographic Protocols', 'AppSec Defense'],
+        keywords: ['owasp top 10', 'runtime protection', 'jwt vulnerability', 'ssrf defense', 'api security'],
+        competitors: ['CrowdStrike', 'Palo Alto Networks', 'Cloudflare', 'Snyk'],
+        patentKeywords: ['intrusion detection', 'behavioral threat analysis', 'zero trust authentication', 'sandboxed execution'],
+      },
+    },
+    {
+      id: 'cloud-infra',
+      icon: '☁️',
+      title: 'Cloud & Distributed Systems',
+      subtitle: 'Microservices, Edge Compute, High-Scale',
+      data: {
+        name: 'Distributed Cloud & High-Throughput Systems',
+        industry: 'Cloud Infrastructure & DevOps',
+        description: 'Monitoring microservices scalability, edge compute, serverless runtimes, and low-latency databases.',
+        researchTopics: ['Distributed Systems', 'Serverless Computing', 'Consensus Protocols', 'Edge Cloud Architecture'],
+        keywords: ['kubernetes', 'kafka streaming', 'redis cluster', 'grpc concurrency', 'service mesh'],
+        competitors: ['AWS', 'Microsoft Azure', 'Cloudflare', 'Vercel'],
+        patentKeywords: ['distributed caching', 'dynamic load balancing', 'edge worker dispatch', 'event stream partition'],
+      },
+    },
+    {
+      id: 'biotech',
+      icon: '🧬',
+      title: 'Biotech & Genomics',
+      subtitle: 'Protein Folding, AI Drug Discovery',
+      data: {
+        name: 'AI Drug Discovery & Computational Genomics',
+        industry: 'Biotechnology & Healthcare AI',
+        description: 'Surveillance of protein folding models, molecular docking, CRISPR genomic edits, and biochemical patents.',
+        researchTopics: ['Protein Structure Prediction', 'Computational Biology', 'CRISPR Genome Editing', 'Molecular Docking'],
+        keywords: ['alphafold', 'antibody design', 'rna therapeutics', 'small molecule screening', 'genomic sequencing'],
+        competitors: ['DeepMind Life Sciences', 'Insilico Medicine', 'Illumina', 'Schrodinger'],
+        patentKeywords: ['protein generation', 'genomic sequence alignment', 'binding affinity prediction', 'biomarker discovery'],
+      },
+    },
+  ];
+
+  const handleApplyTemplate = (tpl: typeof PRESET_TEMPLATES[0]) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...tpl.data,
+    }));
+  };
+
   return (
     <div className="wizard-container">
       {/* Progress Header */}
@@ -205,8 +275,33 @@ export function ProjectWizard() {
           <div className="wizard-step-body">
             <h2 className="wizard-step-title">Step 1 — Project Information</h2>
             <p className="wizard-step-desc">
-              Define the scope and domain for this autonomous intelligence monitoring project.
+              Select an instant preset template or define custom parameters for autonomous intelligence surveillance.
             </p>
+
+            {/* Quick Templates Bar */}
+            <div className="wizard-templates-section">
+              <span className="templates-label">⚡ 1-Click Starter Templates (Recommended):</span>
+              <div className="wizard-templates-grid">
+                {PRESET_TEMPLATES.map((tpl) => {
+                  const isSelected = formData.name === tpl.data.name;
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      className={`wizard-template-card ${isSelected ? 'template-selected' : ''}`}
+                      onClick={() => handleApplyTemplate(tpl)}
+                    >
+                      <span className="template-icon">{tpl.icon}</span>
+                      <div className="template-info">
+                        <span className="template-title">{tpl.title}</span>
+                        <span className="template-sub">{tpl.subtitle}</span>
+                      </div>
+                      {isSelected && <span className="template-check">✓ Applied</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="wizard-form-group">
               <label htmlFor="proj-name">Project Name *</label>
@@ -217,7 +312,6 @@ export function ProjectWizard() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. AI Cybersecurity & Agentic Defense Intelligence"
                 className="wizard-input"
-                autoFocus
               />
             </div>
 

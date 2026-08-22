@@ -19,6 +19,7 @@ interface IntelligenceNavProps {
 export function IntelligenceNav({
   activeProjectId,
   onSelectProject,
+  onRefresh,
 }: IntelligenceNavProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -27,6 +28,8 @@ export function IntelligenceNav({
 
   const [projects, setProjects] = useState<MonitoringProject[]>([]);
   const [selectedProj, setSelectedProj] = useState<string>(activeProjectId || searchParams.get('projectId') || '');
+  const [isRunningSync, setIsRunningSync] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   // Fetch user projects for the dropdown
   const fetchProjects = useCallback(async () => {
@@ -66,6 +69,38 @@ export function IntelligenceNav({
     }
   };
 
+  const handleRunSync = async () => {
+    const targetProject = selectedProj ? projects.find((p) => p.id === selectedProj) : projects[0];
+    if (!targetProject) {
+      router.push('/projects/new');
+      return;
+    }
+
+    try {
+      setIsRunningSync(true);
+      setSyncStatus(`Syncing real data for "${targetProject.name}"...`);
+      const token = await getToken();
+      if (!token) return;
+
+      const res = await fetch(`/api/intelligence/projects/${targetProject.id}/run`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSyncStatus(`✓ Collected ${data.result?.newItemsSaved || 0} new records!`);
+        onRefresh?.();
+      } else {
+        setSyncStatus(data.error || 'Sync completed.');
+      }
+    } catch (err) {
+      setSyncStatus((err as Error).message);
+    } finally {
+      setIsRunningSync(false);
+      setTimeout(() => setSyncStatus(null), 4000);
+    }
+  };
+
   const navLinks = [
     { href: '/intelligence', label: 'Overview' },
     { href: '/intelligence/research', label: 'Research Trends' },
@@ -79,6 +114,13 @@ export function IntelligenceNav({
 
   return (
     <div className="intel-nav-wrapper">
+      {syncStatus && (
+        <div className="intel-toast-banner" role="status">
+          {isRunningSync ? <span className="spinner-mini" /> : <span>✓</span>}
+          <span>{syncStatus}</span>
+        </div>
+      )}
+
       {/* Top Header Bar */}
       <div className="intel-top-bar">
         <div className="intel-top-left">
@@ -93,7 +135,7 @@ export function IntelligenceNav({
               onChange={handleProjectChange}
               className="intel-select"
             >
-              <option value="">All Monitored Projects</option>
+              <option value="">All Monitored Projects ({projects.length})</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.industry})
@@ -104,6 +146,28 @@ export function IntelligenceNav({
         </div>
 
         <div className="intel-top-right">
+          {projects.length > 0 && (
+            <button
+              onClick={handleRunSync}
+              disabled={isRunningSync}
+              className="intel-sync-btn"
+              type="button"
+              title="Run real-time intelligence collection across arXiv, USPTO & News"
+            >
+              {isRunningSync ? (
+                <>
+                  <span className="spinner-mini" />
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <span className="btn-sparkle">⚡</span>
+                  <span>Run Live Sync</span>
+                </>
+              )}
+            </button>
+          )}
+
           <Link href="/projects/new" className="intel-create-proj-btn">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

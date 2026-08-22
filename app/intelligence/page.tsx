@@ -22,6 +22,8 @@ export default function IntelligenceOverviewPage() {
   const [stats, setStats] = useState<IntelligenceOverviewStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isQuickStarting, setIsQuickStarting] = useState(false);
+  const [quickStartMsg, setQuickStartMsg] = useState<string | null>(null);
 
   const fetchOverview = useCallback(async () => {
     try {
@@ -50,6 +52,88 @@ export default function IntelligenceOverviewPage() {
     fetchOverview();
   }, [fetchOverview]);
 
+  const handleQuickStart = async () => {
+    try {
+      setIsQuickStarting(true);
+      setQuickStartMsg('Creating Generative AI & Autonomous Systems project...');
+      const token = await getToken();
+      if (!token) throw new Error('You must be signed in.');
+
+      // 1. Create project
+      const createRes = await fetch('/api/intelligence/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: 'Generative AI & Autonomous Agent Systems',
+          industry: 'Artificial Intelligence & Deep Learning',
+          description: 'Continuous surveillance of large language models, agentic frameworks, multi-agent swarms, and patented neural architectures.',
+          researchTopics: [
+            'Large Language Models',
+            'Autonomous Agents',
+            'Reasoning & Inference',
+            'Transformer Architecture',
+          ],
+          keywords: [
+            'agentic workflows',
+            'mixture of experts',
+            'deepseek r1',
+            'gemini flash',
+            'chain of thought',
+          ],
+          competitors: [
+            'OpenAI',
+            'Anthropic',
+            'Google DeepMind',
+            'Meta AI',
+          ],
+          patentKeywords: [
+            'neural network',
+            'attention mechanism',
+            'reinforcement learning',
+            'distributed inference',
+          ],
+          frequency: 'daily',
+          priorityThreshold: 0.75,
+          notificationPreferences: {
+            email: true,
+            inApp: true,
+            priorityThreshold: 'high',
+          },
+        }),
+      });
+
+      const createData = await createRes.json();
+      if (!createData.success) {
+        throw new Error(createData.error || 'Failed to create starter project.');
+      }
+
+      const projectId = createData.project?.id;
+      setQuickStartMsg('Querying real arXiv, OpenAlex, USPTO & tech news feeds...');
+
+      // 2. Run initial monitoring ingestion
+      if (projectId) {
+        const runRes = await fetch(`/api/intelligence/projects/${projectId}/run`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const runData = await runRes.json();
+        const count = runData.result?.newItemsSaved || 0;
+        setQuickStartMsg(`Ingested ${count} verified records! Loading dashboard...`);
+      }
+
+      // 3. Reload dashboard
+      await fetchOverview();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsQuickStarting(false);
+      setTimeout(() => setQuickStartMsg(null), 4000);
+    }
+  };
+
   const handleAlertStatus = async (alertId: string, status: 'read' | 'archived') => {
     try {
       const token = await getToken();
@@ -76,6 +160,13 @@ export default function IntelligenceOverviewPage() {
     <div className="intel-page-container">
       <IntelligenceNav onRefresh={fetchOverview} />
 
+      {quickStartMsg && (
+        <div className="intel-toast-banner" role="status">
+          <span className="spinner-mini" />
+          <span>{quickStartMsg}</span>
+        </div>
+      )}
+
       {loading ? (
         <div className="intel-loading-container">
           <div className="app-loading-spinner" />
@@ -91,9 +182,11 @@ export default function IntelligenceOverviewPage() {
       ) : !hasProjects ? (
         <EmptyState
           title="Your Intelligence Workspace"
-          description="No monitoring projects yet. Create your first monitoring project to begin collecting research publications, patent filings, competitor developments, and industry intelligence."
-          actionText="Create First Monitoring Project"
+          description="No monitoring projects configured yet. Deploy an instant AI monitoring project with real live data, or configure a custom project with the 7-step wizard."
+          actionText="Create Custom Project (Wizard)"
           actionHref="/projects/new"
+          onQuickStart={handleQuickStart}
+          isQuickStarting={isQuickStarting}
         />
       ) : (
         <div className="intel-dashboard-grid">
