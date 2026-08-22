@@ -1,48 +1,84 @@
 'use client';
 
 // ============================================================
-// Message List Component
+// Message List Component — Smooth Auto-Scroll & Streaming
 // ============================================================
 import React, { useEffect, useRef } from 'react';
 import { MessageBubble } from './message-bubble';
-import type { Message } from '@/types';
+import type { Message, AIModelId } from '@/types';
 
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
+  streamingMessageId?: string | null;
+  onRegenerate?: (modelOverride?: AIModelId) => void;
+  onEditMessage?: (index: number, newContent: string) => void;
 }
 
-export function MessageList({ messages, isLoading }: MessageListProps) {
+export function MessageList({
+  messages,
+  isLoading,
+  streamingMessageId,
+  onRegenerate,
+  onEditMessage,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef(false);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Detect user scroll position
+  const handleScroll = () => {
+    if (!containerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    userScrolledUp.current = scrollHeight - scrollTop - clientHeight > 100;
+  };
+
+  // Auto-scroll when new messages or stream tokens arrive, unless user intentionally scrolled up
   useEffect(() => {
-    if (bottomRef.current) {
+    if (!userScrolledUp.current && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingMessageId]);
 
   return (
-    <div className="message-list" ref={containerRef}>
+    <div className="message-list" ref={containerRef} onScroll={handleScroll}>
       <div className="message-list-inner">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
+        {messages.map((message, index) => {
+          const isStreaming = message.id === streamingMessageId;
+          return (
+            <MessageBubble
+              key={message.id || index}
+              message={message}
+              isStreaming={isStreaming}
+              onRegenerate={
+                index === messages.length - 1 && message.role === 'assistant'
+                  ? onRegenerate
+                  : undefined
+              }
+              onEditMessage={
+                message.role === 'user'
+                  ? (newContent) => onEditMessage?.(index, newContent)
+                  : undefined
+              }
+            />
+          );
+        })}
 
-        {/* Loading indicator while waiting for AI response */}
-        {isLoading && (
+        {/* Loading Spinner while waiting for stream start */}
+        {isLoading && !streamingMessageId && (
           <div className="message-bubble message-assistant">
             <div className="message-avatar avatar-assistant">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" />
-                <circle cx="9" cy="10" r="1.5" fill="currentColor" />
-                <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-                <path d="M9 15C9.5 16.5 10.5 17 12 17C13.5 17 14.5 16.5 15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <div className="assistant-avatar-glow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 24C12 17.3726 6.62742 12 0 12C6.62742 12 12 6.62742 12 0C12 6.62742 17.3726 12 24 12C17.3726 12 12 17.3726 12 24Z" />
+                </svg>
+              </div>
             </div>
             <div className="message-content-wrapper">
-              <div className="message-role-label">NEXORA AI</div>
+              <div className="message-header-bar">
+                <span className="message-role-label">NEXORA AI</span>
+                <span className="message-model-badge">Connecting stream...</span>
+              </div>
               <div className="message-content">
                 <div className="thinking-indicator" role="status" aria-label="AI is thinking">
                   <span className="thinking-dot" />

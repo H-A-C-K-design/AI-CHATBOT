@@ -1,10 +1,9 @@
 // ============================================================
-// POST /api/chat — Main Chat Endpoint with Intelligence RAG & Citations
-// Supports Coding Assistant + Autonomous Intelligence Retrieval
+// POST /api/chat — Real-Time Multi-AI Chat Endpoint
+// Supports Live SSE Streaming, Multi-Model Routing & RAG Citations
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest, AuthError } from '@/lib/auth/session';
-import { chatRequestSchema, validateRequestSize } from '@/lib/validation/chat';
 import { sanitizeInput, sanitizeAIOutput } from '@/lib/validation/sanitize';
 import { checkRateLimit, rateLimitHeaders } from '@/lib/security/rate-limiter';
 import {
@@ -20,31 +19,29 @@ import {
   calculateAndGetTrends,
   getAlerts,
 } from '@/lib/database/intelligence';
-import { sendToOpenAI } from '@/lib/ai/openai';
-import { sendToGemini } from '@/lib/ai/gemini';
-import { sendToN8n } from '@/lib/n8n/client';
-import type { ChatResponse, ApiError } from '@/types';
+import { streamUnifiedAI, dispatchUnifiedAI, generateTitleFromQuery } from '@/lib/ai/router';
+import type { ChatResponse, ApiError, AIModelId, AIPersonaId, Message } from '@/types';
 
-export async function POST(
-  request: NextRequest
-): Promise<NextResponse<ChatResponse | ApiError>> {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function POST(request: NextRequest): Promise<Response> {
   try {
-    // 1. Validate request size
-    if (!validateRequestSize(request.headers.get('content-length'))) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'REQUEST_TOO_LARGE', message: 'Request body is too large.' },
-        },
-        { status: 413 }
-      );
+    // 1. Authenticate Request
+    let userId = 'anonymous';
+    try {
+      const decodedToken = await authenticateRequest(request);
+      userId = decodedToken.uid;
+    } catch (authErr) {
+      if (authErr instanceof AuthError) {
+        return NextResponse.json(
+          { success: false, error: { code: 'UNAUTHORIZED', message: authErr.message } },
+          { status: 401 }
+        );
+      }
     }
 
-    // 2. Authenticate
-    const decodedToken = await authenticateRequest(request);
-    const userId = decodedToken.uid;
-
-    // 3. Rate limit
+    // 2. Rate Limit Check
     const rateResult = checkRateLimit(userId);
     if (!rateResult.allowed) {
       return NextResponse.json(
@@ -52,75 +49,74 @@ export async function POST(
           success: false,
           error: {
             code: 'RATE_LIMITED',
-            message: 'Too many requests. Please wait before trying again.',
+            message: 'Rate limit exceeded. Please wait a moment before sending your next prompt.',
           },
         },
         { status: 429, headers: rateLimitHeaders(rateResult) }
       );
     }
 
-    // 4. Parse and validate body
-    let body: unknown;
+    // 3. Parse Body
+    let body: any;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON in request body.' },
-        },
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON request payload.' } },
         { status: 400 }
       );
     }
 
-    const parseResult = chatRequestSchema.safeParse(body);
-    if (!parseResult.success) {
-      const issue = parseResult.error.issues?.[0];
-      const errorMsg = issue?.message || 'Invalid request payload.';
+    const rawMessage = typeof body.message === 'string' ? body.message : '';
+    if (!rawMessage.trim()) {
       return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: errorMsg },
-        },
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Message content cannot be empty.' } },
         { status: 400 }
       );
     }
 
-    const { message: rawMessage, conversationId: requestedConvId } = parseResult.data;
     const message = sanitizeInput(rawMessage);
+    const requestedConvId = body.conversationId as string | undefined;
+    const requestedModel = (body.model || 'gemini-3.6-flash') as AIModelId;
+    const requestedPersona = (body.persona || 'general-assistant') as AIPersonaId;
+    const isStreamingRequested = body.stream !== false; // Default to real-time streaming
+    const customApiKey = (body.customApiKey || request.headers.get('x-custom-api-key') || undefined) as string | undefined;
 
-    // 5. Conversation management (Fault-tolerant)
-    let conversationId: string = requestedConvId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    // 4. Conversation Management (Fault-Tolerant)
+    let conversationId: string =
+      requestedConvId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     let isNewConversation = false;
 
     try {
       if (requestedConvId) {
-        const conversation = await getConversation(userId, requestedConvId);
-        if (conversation) {
-          conversationId = conversation.id;
+        const existingConv = await getConversation(userId, requestedConvId);
+        if (existingConv) {
+          conversationId = existingConv.id;
         }
       } else {
         const newConv = await createConversation(userId, {
-          title: 'New conversation',
+          title: generateTitleFromQuery(message),
+          model: requestedModel,
+          persona: requestedPersona,
         });
         conversationId = newConv.id;
         isNewConversation = true;
       }
-    } catch (err) {
-      console.warn('[/api/chat] Conversation management DB warning:', (err as Error).message);
+    } catch (dbErr) {
+      console.warn('[/api/chat] Conversation DB Warning:', (dbErr as Error).message);
     }
 
-    // 6. Persist user message (Fault-tolerant)
+    // 5. Persist User Message
     try {
       await createMessage(conversationId, 'user', message);
-    } catch (err) {
-      console.warn('[/api/chat] User message persist warning:', (err as Error).message);
+    } catch (msgDbErr) {
+      console.warn('[/api/chat] User Message DB Warning:', (msgDbErr as Error).message);
     }
 
-    // 7. Context History & Intelligence Intent Retrieval (RAG)
+    // 6. Context History Retrieval
     let history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [];
     try {
-      const recentMessages = await getRecentMessages(conversationId, 20);
+      const recentMessages = await getRecentMessages(conversationId, 16);
       history = recentMessages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -129,119 +125,194 @@ export async function POST(
       history = [];
     }
 
-    // Detect if the user query is asking for research, patents, competitor intel, trends, or project monitoring
-    const isIntelQuery = isIntelligenceIntent(message);
+    // 7. Intelligence RAG Retrieval Grounding
+    const isIntelQuery = isIntelligenceIntent(message) || body.enableIntelligenceRAG === true;
     let intelContext = '';
+    let extractedSources: Array<{ title: string; url: string; sourceName: string; type?: string }> = [];
 
     if (isIntelQuery) {
       try {
         const [items, projects, trends, alerts] = await Promise.all([
-          getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 8 }),
+          getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 6 }),
           getProjects(userId),
           calculateAndGetTrends(userId),
-          getAlerts(userId, { status: 'unread', limit: 5 }),
+          getAlerts(userId, { status: 'unread', limit: 4 }),
         ]);
 
         if (items.length > 0 || projects.length > 0) {
           intelContext = formatIntelligenceContext(items, projects, trends, alerts);
+          extractedSources = items.map((item) => ({
+            title: item.title,
+            url: item.sourceUrl,
+            sourceName: item.sourceName,
+            type: item.type,
+          }));
         }
-      } catch (err) {
-        console.warn('[/api/chat] Intelligence RAG retrieval warning:', (err as Error).message);
+      } catch (ragErr) {
+        console.warn('[/api/chat] RAG Intelligence Warning:', (ragErr as Error).message);
       }
     }
-
-    // 8. Generate AI Response (Direct LLM: OpenAI / Gemini / n8n)
-    let aiResponseText = '';
-    let aiResponseTitle: string | undefined;
 
     const augmentedMessage = intelContext ? `${message}\n\n${intelContext}` : message;
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const openAiResult = await sendToOpenAI(augmentedMessage, history);
-        aiResponseText = openAiResult.response;
-        aiResponseTitle = openAiResult.title;
-      } catch (openAiErr) {
-        console.warn('[AI] OpenAI error, trying Gemini:', (openAiErr as Error).message);
-        if (process.env.GEMINI_API_KEY) {
-          const geminiResult = await sendToGemini(augmentedMessage, history);
-          aiResponseText = geminiResult.response;
-          aiResponseTitle = geminiResult.title;
-        } else {
-          throw openAiErr;
-        }
-      }
-    } else if (process.env.GEMINI_API_KEY) {
-      const geminiResult = await sendToGemini(augmentedMessage, history);
-      aiResponseText = geminiResult.response;
-      aiResponseTitle = geminiResult.title;
-    } else if (process.env.N8N_WEBHOOK_URL) {
-      const n8nResult = await sendToN8n({
-        conversationId,
-        message: augmentedMessage,
-        history,
+
+    // ============================================================
+    // STREAMING SSE MODE (Default ChatGPT Experience)
+    // ============================================================
+    if (isStreamingRequested) {
+      const encoder = new TextEncoder();
+      const generatedTitle = isNewConversation ? generateTitleFromQuery(message) : undefined;
+
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          // Helper to emit SSE event line
+          const sendEvent = (obj: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          };
+
+          // 1. Emit Initial Metadata
+          sendEvent({
+            type: 'meta',
+            conversationId,
+            title: generatedTitle,
+            modelRequested: requestedModel,
+            persona: requestedPersona,
+          });
+
+          // 2. Emit Sources if RAG context exists
+          if (extractedSources.length > 0) {
+            sendEvent({
+              type: 'sources',
+              sources: extractedSources,
+            });
+          }
+
+          let accumulatedAnswer = '';
+          let accumulatedThinking = '';
+          let finalModelUsed = requestedModel;
+
+          try {
+            for await (const chunk of streamUnifiedAI(augmentedMessage, history, {
+              model: requestedModel,
+              persona: requestedPersona,
+              customApiKey,
+            })) {
+              if (chunk.type === 'meta') {
+                if (chunk.modelUsed) finalModelUsed = chunk.modelUsed as AIModelId;
+                sendEvent({
+                  type: 'meta',
+                  modelUsed: chunk.modelUsed,
+                  personaUsed: chunk.personaUsed,
+                });
+              } else if (chunk.type === 'think' && chunk.content) {
+                accumulatedThinking += chunk.content;
+                sendEvent({
+                  type: 'think',
+                  content: chunk.content,
+                });
+              } else if (chunk.type === 'token' && chunk.content) {
+                accumulatedAnswer += chunk.content;
+                sendEvent({
+                  type: 'token',
+                  content: chunk.content,
+                });
+              } else if (chunk.type === 'done') {
+                if (chunk.thinkingContent) accumulatedThinking = chunk.thinkingContent;
+                if (chunk.content) accumulatedAnswer = chunk.content;
+              }
+            }
+
+            // 3. Clean and Persist Assistant Message in DB
+            const sanitizedAnswer = sanitizeAIOutput(accumulatedAnswer);
+            const assistantMsgId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+            try {
+              await createMessage(conversationId, 'assistant', sanitizedAnswer);
+              await touchConversation(conversationId);
+              if (isNewConversation && generatedTitle) {
+                await setConversationTitle(conversationId, generatedTitle);
+              }
+            } catch (persistErr) {
+              console.warn('[/api/chat] Streaming persist warning:', (persistErr as Error).message);
+            }
+
+            // 4. Send Done Event
+            sendEvent({
+              type: 'done',
+              messageId: assistantMsgId,
+              fullContent: sanitizedAnswer,
+              thinkingContent: accumulatedThinking || undefined,
+              modelUsed: finalModelUsed,
+            });
+          } catch (streamErr) {
+            const errorMsg = (streamErr as Error)?.message || 'Stream generation failed';
+            console.error('[/api/chat] Streaming error:', errorMsg);
+            sendEvent({
+              type: 'error',
+              message: errorMsg,
+            });
+          } finally {
+            controller.close();
+          }
+        },
       });
-      aiResponseText = n8nResult.response;
-      aiResponseTitle = n8nResult.title;
-    } else {
-      throw new Error(
-        'No AI API key or n8n webhook configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in .env.local.'
-      );
+
+      return new Response(readableStream, {
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+          ...rateLimitHeaders(rateResult),
+        },
+      });
     }
 
-    // 9. Sanitize and persist assistant message
-    const assistantContent = sanitizeAIOutput(aiResponseText);
-    let assistantMessage: import('@/types').Message = {
+    // ============================================================
+    // NON-STREAMING JSON FALLBACK
+    // ============================================================
+    const dispatchResult = await dispatchUnifiedAI(augmentedMessage, history, {
+      model: requestedModel,
+      persona: requestedPersona,
+      customApiKey,
+    });
+
+    const sanitizedAnswer = sanitizeAIOutput(dispatchResult.response);
+    let assistantMessage: Message = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       conversationId,
       role: 'assistant',
-      content: assistantContent,
+      content: sanitizedAnswer,
       createdAt: new Date().toISOString(),
+      modelUsed: dispatchResult.modelUsed,
+      personaUsed: dispatchResult.personaUsed,
+      thinkingContent: dispatchResult.thinkingContent,
+      sources: extractedSources.length > 0 ? extractedSources : undefined,
     };
 
     try {
-      assistantMessage = await createMessage(
-        conversationId,
-        'assistant',
-        assistantContent
-      );
-    } catch (err) {
-      console.warn('[/api/chat] Assistant message persist warning:', (err as Error).message);
-    }
-
-    // 10. Update conversation timestamp & Title (Fault-tolerant)
-    let generatedTitle: string | undefined;
-    try {
+      assistantMessage = await createMessage(conversationId, 'assistant', sanitizedAnswer);
       await touchConversation(conversationId);
       if (isNewConversation) {
-        const title = aiResponseTitle || message.substring(0, 100);
-        await setConversationTitle(conversationId, title);
-        generatedTitle = title;
+        await setConversationTitle(conversationId, dispatchResult.title);
       }
-    } catch {
-      // safe fallback
+    } catch (persistErr) {
+      console.warn('[/api/chat] Persist warning:', (persistErr as Error).message);
     }
 
-    // 11. Return response
-    const response: ChatResponse = {
+    const responseData: ChatResponse = {
       success: true,
       conversationId,
       message: assistantMessage,
-      ...(generatedTitle && { title: generatedTitle }),
+      title: isNewConversation ? dispatchResult.title : undefined,
+      modelUsed: dispatchResult.modelUsed,
     };
 
-    return NextResponse.json(response, {
+    return NextResponse.json(responseData, {
       headers: rateLimitHeaders(rateResult),
     });
   } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: error.message } },
-        { status: 401 }
-      );
-    }
-
     const errMessage = (error as Error).message || 'An unexpected error occurred.';
-    console.error('[/api/chat] Error:', errMessage);
+    console.error('[/api/chat] Internal error:', errMessage);
 
     return NextResponse.json(
       {
@@ -253,9 +324,6 @@ export async function POST(
   }
 }
 
-/**
- * Check if the query is asking about intelligence, competitors, research, or patents.
- */
 function isIntelligenceIntent(query: string): boolean {
   const lower = query.toLowerCase();
   const intelTriggers = [
@@ -269,14 +337,10 @@ function isIntelligenceIntent(query: string): boolean {
     'alert',
     'developments in',
     'what changed',
-    'what changed in',
     'summarize this week',
-    'what should our team',
     'growing fastest',
-    'monitored',
     'industry news',
     'arxiv',
-    'technology update',
   ];
   return intelTriggers.some((t) => lower.includes(t));
 }
@@ -297,44 +361,30 @@ function formatIntelligenceContext(
   alerts: any[]
 ): string {
   let context = `[REAL VERIFIED DATABASE INTELLIGENCE RETRIEVAL]\n`;
-  context += `Active Monitoring Projects: ${projects.map((p) => p.name).join(', ') || 'None'}\n\n`;
+  if (projects.length > 0) {
+    context += `Active Monitoring Projects: ${projects.map((p) => p.name).join(', ')}\n\n`;
+  }
 
   if (items.length > 0) {
     context += `RELEVANT MONITORED RECORDS (${items.length}):\n`;
     items.forEach((item, i) => {
-      context += `[Record ${i + 1}] Type: ${item.type.toUpperCase()} | Title: "${item.title}"\n`;
+      context += `[Record ${i + 1}] Type: ${item.type?.toUpperCase()} | Title: "${item.title}"\n`;
       context += `Source: ${item.sourceName} | Verified URL: ${item.sourceUrl}\n`;
-      context += `Published: ${item.publishedAt} | Relevance: ${(item.relevanceScore * 100).toFixed(0)}% | Impact: ${(item.impactScore * 100).toFixed(0)}%\n`;
-      context += `Summary: ${item.summary}\n`;
-      if (item.whyItMatters) context += `Why It Matters: ${item.whyItMatters}\n`;
-      context += `\n`;
+      context += `Summary: ${item.summary}\n\n`;
     });
   }
 
   if (trends.length > 0) {
     context += `CURRENT HISTORICAL TRENDS:\n`;
     trends.slice(0, 3).forEach((t) => {
-      context += `• ${t.topic} (${t.status.toUpperCase()}): ${t.growthRate >= 0 ? '+' : ''}${t.growthRate}% growth, ${t.itemCount} items\n`;
+      context += `• ${t.topic}: ${t.growthRate >= 0 ? '+' : ''}${t.growthRate}% growth\n`;
     });
     context += `\n`;
   }
 
-  if (alerts.length > 0) {
-    context += `ACTIVE HIGH-PRIORITY ALERTS:\n`;
-    alerts.slice(0, 3).forEach((a) => {
-      context += `• [${a.priority.toUpperCase()}] ${a.title} — ${a.reason}\n`;
-    });
-    context += `\n`;
-  }
-
-  context += `INSTRUCTIONS FOR RESPONSE:
-1. Base your answer strictly on the above real records and context. Never fabricate facts, patents, research papers, or URLs.
-2. If citing records, ALWAYS include clickable markdown links to the verified source URLs at the bottom under "Supporting sources:".
-Example format:
-Supporting sources:
-• [Publication Title](sourceUrl) — SourceName (Research)
-• [Patent Title](sourceUrl) — SourceName (Patent)
-3. If no matching record answers the specific question, clearly explain what is currently monitored in the user's database.`;
+  context += `INSTRUCTIONS:
+1. Base your answer on the above verified records.
+2. Provide clickable markdown links to verified source URLs under a "Supporting Sources" section.`;
 
   return context;
 }

@@ -19,6 +19,12 @@ export const chatRequestSchema = z.object({
     .string()
     .min(1, 'Message must not be empty')
     .max(MAX_MESSAGE_LENGTH, `Message must be at most ${MAX_MESSAGE_LENGTH} characters`),
+  model: z.string().max(64).optional(),
+  persona: z.string().max(64).optional(),
+  stream: z.boolean().optional(),
+  enableReasoning: z.boolean().optional(),
+  enableIntelligenceRAG: z.boolean().optional(),
+  customApiKey: z.string().max(256).optional(),
 });
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;
