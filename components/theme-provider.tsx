@@ -5,16 +5,18 @@
 // ============================================================
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light';
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
   setTheme: () => {},
+  toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -22,23 +24,54 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('nexus_theme') as Theme | null;
-    const initialTheme = saved === 'light' ? 'light' : 'dark';
-    setThemeState(initialTheme);
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(initialTheme);
+    try {
+      const saved = (localStorage.getItem('nexus_theme') ||
+        localStorage.getItem('nexora_theme') ||
+        localStorage.getItem('theme')) as Theme | null;
+
+      let initialTheme: Theme = 'dark';
+      if (saved === 'light' || saved === 'dark') {
+        initialTheme = saved;
+      } else if (
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: light)').matches
+      ) {
+        initialTheme = 'light';
+      }
+
+      setThemeState(initialTheme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(initialTheme);
+      document.documentElement.setAttribute('data-theme', initialTheme);
+      document.documentElement.style.colorScheme = initialTheme;
+    } catch {
+      // ignore
+    }
     setMounted(true);
   }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('nexus_theme', newTheme);
+    try {
+      localStorage.setItem('nexus_theme', newTheme);
+      localStorage.setItem('nexora_theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    } catch {
+      // ignore
+    }
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.style.colorScheme = newTheme;
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -47,3 +80,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useAppTheme() {
   return useContext(ThemeContext);
 }
+

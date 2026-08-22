@@ -8,6 +8,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MessageList } from './message-list';
 import { Composer } from './composer';
 import { EmptyState } from './empty-state';
+import { AmbientBackground } from '@/components/ui/ambient-background';
 import { useAuth } from '@/components/auth/auth-provider';
 import type { Message, AIModelId, AIPersonaId } from '@/types';
 
@@ -49,6 +50,7 @@ export function ChatContainer({
         persona?: AIPersonaId;
         enableReasoning?: boolean;
         enableIntelligenceRAG?: boolean;
+        attachments?: import('@/types').FileAttachment[];
       } = {}
     ) => {
       setError(null);
@@ -64,6 +66,7 @@ export function ChatContainer({
         conversationId: currentConvIdRef.current || '',
         role: 'user',
         content,
+        attachments: options.attachments,
         createdAt: new Date().toISOString(),
       };
 
@@ -108,12 +111,13 @@ export function ChatContainer({
           },
           body: JSON.stringify({
             conversationId: currentConvIdRef.current || undefined,
-            message: content,
+            message: content || (options.attachments && options.attachments.length > 0 ? `[Attached ${options.attachments.length} files]` : ''),
             model: chosenModel,
             persona: chosenPersona,
             stream: true,
             enableReasoning: options.enableReasoning,
             enableIntelligenceRAG: options.enableIntelligenceRAG,
+            attachments: options.attachments,
             customApiKey,
           }),
           signal: abortControllerRef.current.signal,
@@ -367,6 +371,7 @@ export function ChatContainer({
 
   return (
     <div className="chat-container">
+      <AmbientBackground />
       {/* Top Utility Bar if messages exist */}
       {messages.length > 0 && (
         <div className="chat-top-utility-bar">

@@ -232,9 +232,6 @@ export async function deleteConversation(
   userId: string,
   conversationId: string
 ): Promise<boolean> {
-  const existing = await getConversation(userId, conversationId);
-  if (!existing) return false;
-
   const cache = getUserConversationsCache(userId);
   cache.delete(conversationId);
 
@@ -258,7 +255,7 @@ export async function deleteConversation(
     await batch.commit();
     return true;
   } catch (error) {
-    console.warn('[Firestore] deleteConversation:', (error as Error).message);
+    console.warn('[Firestore] deleteConversation notice:', (error as Error).message);
     return true;
   }
 }

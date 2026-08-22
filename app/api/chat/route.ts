@@ -106,23 +106,23 @@ export async function POST(request: NextRequest): Promise<Response> {
       console.warn('[/api/chat] Conversation DB Warning:', (dbErr as Error).message);
     }
 
-    // 5. Persist User Message
-    try {
-      await createMessage(conversationId, 'user', message);
-    } catch (msgDbErr) {
-      console.warn('[/api/chat] User Message DB Warning:', (msgDbErr as Error).message);
-    }
-
-    // 6. Context History Retrieval
+    // 5. Context History Retrieval (prior turns in this conversation)
     let history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [];
     try {
-      const recentMessages = await getRecentMessages(conversationId, 16);
-      history = recentMessages.map((m) => ({
+      const priorMessages = await getRecentMessages(conversationId, 16);
+      history = priorMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
     } catch {
       history = [];
+    }
+
+    // 6. Persist Current User Message
+    try {
+      await createMessage(conversationId, 'user', message, { attachments });
+    } catch (msgDbErr) {
+      console.warn('[/api/chat] User Message DB Warning:', (msgDbErr as Error).message);
     }
 
     // 7. Intelligence RAG Retrieval Grounding
@@ -153,7 +153,22 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
     }
 
-    const augmentedMessage = intelContext ? `${message}\n\n${intelContext}` : message;
+    const attachments = (Array.isArray(body.attachments) ? body.attachments : []) as any[];
+    let attachmentContext = '';
+    if (attachments.length > 0) {
+      const fileSummaries = attachments.map((att: any) => {
+        if (att.textContent) {
+          return `\n--- Attached Document: ${att.name} (${(att.size / 1024).toFixed(1)} KB) ---\n${att.textContent.slice(0, 10000)}\n--- End of ${att.name} ---`;
+        } else if (att.type?.startsWith('image/')) {
+          return `\n[User uploaded image attachment: "${att.name}" (${(att.size / 1024).toFixed(1)} KB)]`;
+        } else {
+          return `\n[User uploaded file attachment: "${att.name}" (${(att.size / 1024).toFixed(1)} KB)]`;
+        }
+      }).join('\n\n');
+      attachmentContext = `\n\n[USER ATTACHED FILES]:\n${fileSummaries}`;
+    }
+
+    const augmentedMessage = `${message}${attachmentContext}${intelContext ? `\n\n${intelContext}` : ''}`;
 
     // ============================================================
     // STREAMING SSE MODE (Default ChatGPT Experience)
@@ -226,8 +241,14 @@ export async function POST(request: NextRequest): Promise<Response> {
             const assistantMsgId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
             try {
-              await createMessage(conversationId, 'assistant', sanitizedAnswer);
-              await touchConversation(conversationId);
+              await createMessage(conversationId, 'assistant', sanitizedAnswer, {
+                id: assistantMsgId,
+                modelUsed: finalModelUsed,
+                personaUsed: requestedPersona,
+                thinkingContent: accumulatedThinking || undefined,
+                sources: extractedSources.length > 0 ? extractedSources : undefined,
+              });
+              await touchConversation(conversationId, sanitizedAnswer);
               if (isNewConversation && generatedTitle) {
                 await setConversationTitle(conversationId, generatedTitle);
               }

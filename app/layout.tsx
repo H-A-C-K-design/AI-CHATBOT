@@ -33,6 +33,22 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('nexus_theme') || localStorage.getItem('nexora_theme') || localStorage.getItem('theme');
+                  var theme = (saved === 'light' || saved === 'dark') ? saved : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(theme);
+                  document.documentElement.setAttribute('data-theme', theme);
+                  document.documentElement.style.colorScheme = theme;
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <AntiInspect />

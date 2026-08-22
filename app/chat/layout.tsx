@@ -92,21 +92,28 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
   const handleDeleteConversation = useCallback(
     async (id: string) => {
+      // 1. Optimistic instant removal from state & localStorage
+      setConversations((prev) => {
+        const updated = prev.filter((c) => c.id !== id);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('nexora_chat_conversations', JSON.stringify(updated));
+        }
+        return updated;
+      });
+
+      // 2. Redirect away if currently inside the deleted conversation
+      if (activeConversationId === id) {
+        router.replace('/chat');
+      }
+
+      // 3. Delete from backend database
       try {
         const token = await getToken();
-        if (!token) return;
-
-        const response = await fetch(`/api/conversations/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          setConversations((prev) => prev.filter((c) => c.id !== id));
-          if (activeConversationId === id) {
-            router.push('/chat');
-          }
+        if (token) {
+          await fetch(`/api/conversations/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
         }
       } catch {
         // Silent fail

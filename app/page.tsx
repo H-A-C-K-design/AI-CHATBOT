@@ -5,10 +5,10 @@
 // ============================================================
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { CodeBlock } from '@/components/chat/code-block';
+import { NexoraLogo } from '@/components/ui/nexora-logo';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -66,16 +66,7 @@ LIMIT 20;`,
       <header className="landing-nav">
         <div className="landing-nav-inner">
           <Link href="/" className="landing-brand">
-            <div className="landing-brand-icon">
-              <Image
-                src="/logo.png"
-                alt="NEXORA AI Logo"
-                width={32}
-                height={32}
-                className="brand-logo-img"
-                priority
-              />
-            </div>
+            <NexoraLogo size={32} withBackground={true} glow={true} />
             <span className="landing-brand-name">NEXORA AI</span>
           </Link>
 
@@ -357,13 +348,7 @@ async def authenticate_jwt(request: Request):
         <div className="landing-footer-inner">
           <div className="footer-left">
             <div className="footer-brand-wrap">
-              <Image
-                src="/logo.png"
-                alt="NEXORA AI"
-                width={24}
-                height={24}
-                className="footer-logo-img"
-              />
+              <NexoraLogo size={24} withBackground={true} />
               <span className="footer-logo">NEXORA AI</span>
             </div>
             <span className="footer-copy">© {new Date().getFullYear()} Nexora AI. All rights reserved.</span>

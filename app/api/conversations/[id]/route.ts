@@ -107,14 +107,7 @@ export async function DELETE(
     const userId = decodedToken.uid;
     const { id } = await context.params;
 
-    const deleted = await deleteConversation(userId, id);
-    if (!deleted) {
-      return NextResponse.json(
-        { success: false, error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found.' } },
-        { status: 404 }
-      );
-    }
-
+    await deleteConversation(userId, id);
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof AuthError) {

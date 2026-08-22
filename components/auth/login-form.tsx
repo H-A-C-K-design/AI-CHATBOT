@@ -13,6 +13,7 @@ import {
 } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { NexoraLogo } from '@/components/ui/nexora-logo';
 
 export function LoginForm() {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
@@ -143,14 +144,7 @@ export function LoginForm() {
       {/* Logo & Branding */}
       <div className="login-header">
         <div className="login-logo">
-          <Image
-            src="/logo.png"
-            alt="NEXORA AI Logo"
-            width={64}
-            height={64}
-            className="login-logo-img"
-            priority
-          />
+          <NexoraLogo size={64} withBackground={true} glow={true} />
         </div>
         <h1 className="login-title">NEXORA AI</h1>
         <p className="login-subtitle">Your intelligent coding companion powered by AI</p>

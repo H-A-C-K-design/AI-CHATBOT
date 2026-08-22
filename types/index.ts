@@ -78,6 +78,16 @@ export interface AIPersonaOption {
   systemInstruction: string;
 }
 
+// --- File & Image Attachments ---
+export interface FileAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl?: string; // base64 / data URL for image preview & multimodal
+  textContent?: string; // parsed text/code content
+}
+
 // --- Message ---
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -91,6 +101,7 @@ export interface Message {
   personaUsed?: string;
   thinkingContent?: string;
   reasoningDurationMs?: number;
+  attachments?: FileAttachment[];
   agentExecutionState?: import('./agent').AgentExecutionState;
   sources?: Array<{
     title: string;
@@ -110,6 +121,7 @@ export interface ChatRequest {
   enableReasoning?: boolean;
   enableIntelligenceRAG?: boolean;
   enableAgentMode?: boolean;
+  attachments?: FileAttachment[];
   customApiKey?: string; // Optional user-provided API key override
 }
 

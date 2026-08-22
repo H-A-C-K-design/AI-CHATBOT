@@ -37,26 +37,44 @@ const WORKING_MODELS = [
 ];
 
 /**
- * Format conversation history into Gemini API format
+ * Format conversation history into Gemini API format with strict turn alternation
  */
 function buildGeminiContents(
   userMessage: string,
   history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = []
 ) {
-  const contents = [];
+  const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-  for (const msg of history.slice(-14)) {
-    if (msg.role === 'system') continue;
-    contents.push({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
-    });
+  // 1. Process and format past conversation turns
+  for (const msg of history.slice(-16)) {
+    if (msg.role === 'system' || !msg.content?.trim()) continue;
+    const geminiRole = msg.role === 'assistant' ? 'model' : 'user';
+
+    // Gemini API requires strict role alternation (user -> model -> user -> model)
+    if (contents.length > 0 && contents[contents.length - 1].role === geminiRole) {
+      contents[contents.length - 1].parts[0].text += `\n\n${msg.content}`;
+    } else {
+      contents.push({
+        role: geminiRole,
+        parts: [{ text: msg.content }],
+      });
+    }
   }
 
-  contents.push({
-    role: 'user',
-    parts: [{ text: userMessage }],
-  });
+  // 2. Gemini requires the conversation to start with a 'user' turn
+  while (contents.length > 0 && contents[0].role === 'model') {
+    contents.shift();
+  }
+
+  // 3. Append the new incoming user prompt
+  if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+    contents[contents.length - 1].parts[0].text += `\n\n${userMessage}`;
+  } else {
+    contents.push({
+      role: 'user',
+      parts: [{ text: userMessage }],
+    });
+  }
 
   return contents;
 }

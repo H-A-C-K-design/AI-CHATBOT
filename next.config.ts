@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Hide server technology headers
   poweredByHeader: false,
 
+  // Disable Dev Indicators overlay
+  devIndicators: false,
+
   // Disable client source maps so no source code can be inspected in DevTools
   productionBrowserSourceMaps: false,
 
