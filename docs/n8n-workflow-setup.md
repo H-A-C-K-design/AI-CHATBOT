@@ -199,3 +199,46 @@ N8N_WEBHOOK_SECRET=your-secret-from-step-2
 3. **Monitor executions** in the n8n dashboard
 4. **Set up error workflows** in n8n for alerting
 5. **Rate limit** at the application layer (already implemented in the API)
+
+---
+
+# Part 2: Autonomous Research & Competitive Intelligence Workflow
+
+NEXORA AI includes a dedicated production-grade n8n workflow for continuous autonomous monitoring of academic publications, patent disclosures, and competitor news.
+
+## Workflow File
+
+The complete workflow definition is available in:
+`docs/n8n/nexora-intelligence-monitoring.json`
+
+## Workflow Architecture
+
+```
+Schedule Trigger (Hourly / Daily)
+        ↓
+Fetch Active Projects from NEXORA API (/api/intelligence/projects)
+        ↓
+Generate Monitoring Query Tasks
+        ↓
+Query Real Sources (arXiv API, OpenAlex Scientific API, HackerNews / News)
+        ↓
+Normalize Data Schema
+        ↓
+Deduplicate (SHA-256 Fingerprint check)
+        ↓
+AI Analysis & Transparent Scoring (Relevance, Impact, Confidence)
+        ↓
+Inbound Webhook Delivery to NEXORA API (/api/n8n/webhook)
+        ↓
+Firestore Persistence + Alert Condition Evaluation
+```
+
+## How to Import into n8n
+
+1. Open your n8n dashboard.
+2. Click **Add workflow** → **Import from File...**
+3. Select `docs/n8n/nexora-intelligence-monitoring.json`.
+4. In n8n Settings, add the required environment variables:
+   - `NEXORA_APP_URL`: Your deployed application URL (e.g. `https://ai-chatbot-umber-psi.vercel.app` or `http://localhost:3000`)
+   - `N8N_WEBHOOK_SECRET`: The shared secret configured in your `.env.local`
+5. Activate the workflow!

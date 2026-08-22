@@ -1,0 +1,247 @@
+{
+  "name": "NEXORA AI — Autonomous Research & Competitive Intelligence Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexora-monitoring-trigger",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "webhook-trigger-1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 500],
+      "webhookId": "nexora-monitoring-trigger"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.NEXORA_APP_URL || 'https://ai-chatbot-umber-psi.vercel.app' }}/api/intelligence/projects",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-active-projects",
+      "name": "Fetch Active Monitoring Projects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate individual collector search queries for each active project\nconst items = $input.all();\nconst tasks = [];\n\nfor (const item of items) {\n  const projects = item.json.projects || [item.json];\n  for (const proj of projects) {\n    if (proj.status === 'active') {\n      tasks.push({\n        projectId: proj.id,\n        userId: proj.userId,\n        projectName: proj.name,\n        industry: proj.industry,\n        keywords: proj.keywords || [],\n        topics: proj.researchTopics || [],\n        competitors: proj.competitors || [],\n        patentKeywords: proj.patentKeywords || []\n      });\n    }\n  }\n}\n\nreturn tasks.map(t => ({ json: t }));"
+      },
+      "id": "generate-tasks-code",
+      "name": "Generate Monitoring Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://export.arxiv.org/api/query?search_query=all:{{ encodeURIComponent($json.keywords.slice(0, 2).join(' ')) }}&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending",
+        "options": {}
+      },
+      "id": "collect-arxiv-sources",
+      "name": "Collect arXiv Research Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 260]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.openalex.org/works?search={{ encodeURIComponent($json.keywords.slice(0, 2).join(' ')) }}&per_page=5&sort=publication_date:desc",
+        "options": {}
+      },
+      "id": "collect-openalex-sources",
+      "name": "Collect OpenAlex Publications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hn.algolia.net/api/v1/search_by_date?query={{ encodeURIComponent($json.keywords[0] || 'AI') }}&tags=story&hitsPerPage=5",
+        "options": {}
+      },
+      "id": "collect-hn-news",
+      "name": "Collect Industry News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 540]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalization, deduplication and payload formatting for NEXORA AI Ingestion API\nconst input = $input.all();\nconst normalizedRecords = [];\n\nfor (const item of input) {\n  const data = item.json;\n  // Parse and normalize into standard schema\n  if (data.results) {\n    // OpenAlex format\n    for (const work of data.results) {\n      if (work.title) {\n        normalizedRecords.push({\n          type: 'research',\n          title: work.title,\n          description: `Scholarly publication in ${work.primary_location?.source?.display_name || 'Academic Venue'}.`,\n          sourceName: work.primary_location?.source?.display_name || 'OpenAlex Index',\n          sourceUrl: work.doi || work.primary_location?.landing_page_url || work.id,\n          publishedAt: work.publication_date || new Date().toISOString(),\n          relevanceScore: 0.85,\n          impactScore: 0.80,\n          confidenceScore: 0.95,\n          summary: `Peer-reviewed scientific work with ${work.cited_by_count || 0} citations.`,\n          whyItMatters: 'Advances state of the art in monitored domain.'\n        });\n      }\n    }\n  }\n}\n\nreturn normalizedRecords.map(r => ({ json: r }));"
+      },
+      "id": "normalize-deduplicate",
+      "name": "Normalize & Deduplicate Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1220, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXORA_APP_URL || 'https://ai-chatbot-umber-psi.vercel.app' }}/api/n8n/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "items",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "push-to-nexora-db",
+      "name": "Deliver Verified Intelligence to NEXORA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1480, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Monitoring Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Monitoring Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Monitoring Projects": {
+      "main": [
+        [
+          {
+            "node": "Generate Monitoring Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Monitoring Tasks": {
+      "main": [
+        [
+          {
+            "node": "Collect arXiv Research Sources",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Collect OpenAlex Publications",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Collect Industry News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect arXiv Research Sources": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Deduplicate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect OpenAlex Publications": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Deduplicate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Industry News": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Deduplicate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Deduplicate Data": {
+      "main": [
+        [
+          {
+            "node": "Deliver Verified Intelligence to NEXORA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

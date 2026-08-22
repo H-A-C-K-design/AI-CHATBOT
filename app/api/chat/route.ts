@@ -1,5 +1,6 @@
 // ============================================================
-// POST /api/chat — Main Chat Endpoint (Powered by OpenAI)
+// POST /api/chat — Main Chat Endpoint with Intelligence RAG & Citations
+// Supports Coding Assistant + Autonomous Intelligence Retrieval
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest, AuthError } from '@/lib/auth/session';
@@ -13,6 +14,12 @@ import {
   setConversationTitle,
 } from '@/lib/database/conversations';
 import { createMessage, getRecentMessages } from '@/lib/database/messages';
+import {
+  getIntelligenceItems,
+  getProjects,
+  calculateAndGetTrends,
+  getAlerts,
+} from '@/lib/database/intelligence';
 import { sendToOpenAI } from '@/lib/ai/openai';
 import { sendToGemini } from '@/lib/ai/gemini';
 import type { ChatResponse, ApiError } from '@/types';
@@ -90,11 +97,9 @@ export async function POST(
       if (conversation) {
         conversationId = conversation.id;
       } else {
-        // Fallback: assign requested ID gracefully without blocking multi-turn chat
         conversationId = requestedConvId;
       }
     } else {
-      // Create a new conversation
       const newConv = await createConversation(userId, {
         title: 'New conversation',
       });
@@ -105,26 +110,46 @@ export async function POST(
     // 6. Persist user message
     await createMessage(conversationId, 'user', message);
 
-    // 7. Build context history
+    // 7. Context History & Intelligence Intent Retrieval (RAG)
     const recentMessages = await getRecentMessages(conversationId, 20);
     const history = recentMessages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
 
-    // 8. Generate AI Response (Prioritize active Gemini or OpenAI)
+    // Detect if the user query is asking for research, patents, competitor intel, trends, or project monitoring
+    const isIntelQuery = isIntelligenceIntent(message);
+    let augmentedMessage = message;
+
+    if (isIntelQuery) {
+      const [items, projects, trends, alerts] = await Promise.all([
+        getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 8 }),
+        getProjects(userId),
+        calculateAndGetTrends(userId),
+        getAlerts(userId, { status: 'unread', limit: 5 }),
+      ]);
+
+      if (items.length > 0 || projects.length > 0) {
+        const intelContext = formatIntelligenceContext(items, projects, trends, alerts);
+        augmentedMessage = `${message}\n\n${intelContext}`;
+      } else {
+        augmentedMessage = `${message}\n\n[SYSTEM INTELLIGENCE RETRIEVAL: No matching intelligence records found in database for user. Active Projects: 0. Instruct user to create a monitoring project in /intelligence or /projects if inquiring about competitive intelligence.]`;
+      }
+    }
+
+    // 8. Generate AI Response (Gemini / OpenAI)
     let aiResponseText = '';
     let aiResponseTitle: string | undefined;
 
     if (process.env.GEMINI_API_KEY) {
       try {
-        const geminiResult = await sendToGemini(message, history);
+        const geminiResult = await sendToGemini(augmentedMessage, history);
         aiResponseText = geminiResult.response;
         aiResponseTitle = geminiResult.title;
       } catch (err: unknown) {
         if (process.env.OPENAI_API_KEY) {
           console.warn('[AI] Gemini error, trying OpenAI:', (err as Error).message);
-          const openAiResult = await sendToOpenAI(message, history);
+          const openAiResult = await sendToOpenAI(augmentedMessage, history);
           aiResponseText = openAiResult.response;
           aiResponseTitle = openAiResult.title;
         } else {
@@ -132,11 +157,13 @@ export async function POST(
         }
       }
     } else if (process.env.OPENAI_API_KEY) {
-      const openAiResult = await sendToOpenAI(message, history);
+      const openAiResult = await sendToOpenAI(augmentedMessage, history);
       aiResponseText = openAiResult.response;
       aiResponseTitle = openAiResult.title;
     } else {
-      throw new Error('No AI API key configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in .env.local.');
+      throw new Error(
+        'No AI API key configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in .env.local.'
+      );
     }
 
     // 9. Sanitize and persist assistant message
@@ -170,7 +197,6 @@ export async function POST(
       headers: rateLimitHeaders(rateResult),
     });
   } catch (error) {
-    // Auth errors
     if (error instanceof AuthError) {
       return NextResponse.json(
         { success: false, error: { code: 'UNAUTHORIZED', message: error.message } },
@@ -178,7 +204,6 @@ export async function POST(
       );
     }
 
-    // OpenAI or custom error message
     const errMessage = (error as Error).message || 'An unexpected error occurred.';
     console.error('[/api/chat] Error:', errMessage);
 
@@ -190,4 +215,90 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+/**
+ * Check if the query is asking about intelligence, competitors, research, or patents.
+ */
+function isIntelligenceIntent(query: string): boolean {
+  const lower = query.toLowerCase();
+  const intelTriggers = [
+    'research',
+    'patent',
+    'competitor',
+    'intelligence',
+    'paper',
+    'publication',
+    'trend',
+    'alert',
+    'developments in',
+    'what changed',
+    'what changed in',
+    'summarize this week',
+    'what should our team',
+    'growing fastest',
+    'monitored',
+    'industry news',
+    'arxiv',
+    'technology update',
+  ];
+  return intelTriggers.some((t) => lower.includes(t));
+}
+
+function extractKeywords(query: string): string {
+  return query
+    .replace(/[^\w\s]/gi, '')
+    .split(/\s+/)
+    .filter((w) => w.length > 3)
+    .slice(0, 4)
+    .join(' ');
+}
+
+function formatIntelligenceContext(
+  items: any[],
+  projects: any[],
+  trends: any[],
+  alerts: any[]
+): string {
+  let context = `[REAL VERIFIED DATABASE INTELLIGENCE RETRIEVAL]\n`;
+  context += `Active Monitoring Projects: ${projects.map((p) => p.name).join(', ') || 'None'}\n\n`;
+
+  if (items.length > 0) {
+    context += `RELEVANT MONITORED RECORDS (${items.length}):\n`;
+    items.forEach((item, i) => {
+      context += `[Record ${i + 1}] Type: ${item.type.toUpperCase()} | Title: "${item.title}"\n`;
+      context += `Source: ${item.sourceName} | Verified URL: ${item.sourceUrl}\n`;
+      context += `Published: ${item.publishedAt} | Relevance: ${(item.relevanceScore * 100).toFixed(0)}% | Impact: ${(item.impactScore * 100).toFixed(0)}%\n`;
+      context += `Summary: ${item.summary}\n`;
+      if (item.whyItMatters) context += `Why It Matters: ${item.whyItMatters}\n`;
+      context += `\n`;
+    });
+  }
+
+  if (trends.length > 0) {
+    context += `CURRENT HISTORICAL TRENDS:\n`;
+    trends.slice(0, 3).forEach((t) => {
+      context += `• ${t.topic} (${t.status.toUpperCase()}): ${t.growthRate >= 0 ? '+' : ''}${t.growthRate}% growth, ${t.itemCount} items\n`;
+    });
+    context += `\n`;
+  }
+
+  if (alerts.length > 0) {
+    context += `ACTIVE HIGH-PRIORITY ALERTS:\n`;
+    alerts.slice(0, 3).forEach((a) => {
+      context += `• [${a.priority.toUpperCase()}] ${a.title} — ${a.reason}\n`;
+    });
+    context += `\n`;
+  }
+
+  context += `INSTRUCTIONS FOR RESPONSE:
+1. Base your answer strictly on the above real records and context. Never fabricate facts, patents, research papers, or URLs.
+2. If citing records, ALWAYS include clickable markdown links to the verified source URLs at the bottom under "Supporting sources:".
+Example format:
+Supporting sources:
+• [Publication Title](sourceUrl) — SourceName (Research)
+• [Patent Title](sourceUrl) — SourceName (Patent)
+3. If no matching record answers the specific question, clearly explain what is currently monitored in the user's database.`;
+
+  return context;
 }

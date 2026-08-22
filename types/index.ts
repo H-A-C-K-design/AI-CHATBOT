@@ -117,3 +117,6 @@ export interface MessagesListResponse {
   success: true;
   messages: Message[];
 }
+
+// --- Re-export Intelligence Types ---
+export * from './intelligence';

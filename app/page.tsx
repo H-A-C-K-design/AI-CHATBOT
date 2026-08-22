@@ -83,6 +83,7 @@ LIMIT 20;`,
           </Link>
 
           <nav className="landing-nav-links">
+            <Link href="/intelligence" className="landing-nav-link">Intelligence</Link>
             <a href="#features" className="landing-nav-link">Features</a>
             <a href="#code-demo" className="landing-nav-link">Capabilities</a>
             <a href="#architecture" className="landing-nav-link">Architecture</a>
@@ -91,12 +92,17 @@ LIMIT 20;`,
           <div className="landing-nav-actions">
             <ThemeToggle />
             {user ? (
-              <Link href="/chat" className="landing-btn-primary">
-                Open Chat
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
+              <>
+                <Link href="/intelligence" className="landing-btn-ghost">
+                  Intelligence
+                </Link>
+                <Link href="/chat" className="landing-btn-primary">
+                  Open Chat
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              </>
             ) : (
               <>
                 <Link href="/login" className="landing-btn-ghost">
