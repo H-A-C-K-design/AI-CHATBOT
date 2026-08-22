@@ -4393,3 +4393,259 @@ body {
 .wizard-back-link:hover {
   color: var(--accent-primary);
 }
+
+/* ============================================================
+   ADVANCED MOBILE & RESPONSIVE DESIGN ENHANCEMENTS
+   ============================================================ */
+
+/* --- Mobile Viewport & Touch Optimization (screens <= 768px) --- */
+@media (max-width: 768px) {
+  .intel-page-container {
+    padding: 12px 12px 60px 12px;
+  }
+
+  .intel-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .intel-top-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .intel-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .intel-top-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .intel-run-btn,
+  .intel-create-proj-btn {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  .intel-sub-tabs {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .intel-tab-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .intel-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .intel-metric-card {
+    padding: 14px 12px;
+  }
+
+  .intel-metric-value {
+    font-size: 22px;
+  }
+
+  .intel-card {
+    padding: 14px;
+  }
+
+  .intel-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .intel-scores-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .intel-filters-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .intel-search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .intel-filter-dropdowns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .intel-filter-select {
+    width: 100%;
+  }
+
+  .intel-filter-tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    width: 100%;
+  }
+
+  .wizard-card {
+    padding: 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .wizard-step-title {
+    font-size: 17px;
+  }
+
+  .wizard-input-tag-row {
+    flex-direction: column;
+  }
+
+  .wizard-tag-add-btn {
+    width: 100%;
+  }
+
+  .wizard-card-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+
+  .wizard-footer-right {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .wizard-prev-btn,
+  .wizard-cancel-btn,
+  .wizard-next-btn,
+  .wizard-submit-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .project-card {
+    padding: 16px;
+  }
+
+  .project-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .project-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .proj-action-btn {
+    justify-content: center;
+    padding: 8px 6px;
+  }
+
+  .report-gen-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .report-gen-btn-col button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-document-sheet {
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    gap: 18px;
+  }
+
+  .report-doc-title {
+    font-size: 19px;
+  }
+
+  .report-matrix-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .intel-competitors-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .intel-trend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Extra Small Phone Optimization (screens <= 480px) --- */
+@media (max-width: 480px) {
+  .intel-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-header {
+    padding: 8px 12px;
+  }
+
+  .chat-header-brand-tag span:last-child {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .message-content-wrapper {
+    max-width: 94%;
+  }
+
+  .composer-wrapper {
+    padding: 6px 8px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .composer {
+    padding: 6px 8px 6px 12px;
+    border-radius: 20px;
+  }
+
+  .composer-textarea {
+    font-size: 14px;
+  }
+
+  .composer-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* --- Safe Area Inset Support --- */
+.intel-main-wrapper {
+  padding-bottom: env(safe-area-inset-bottom);
+}
