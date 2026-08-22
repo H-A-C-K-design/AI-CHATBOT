@@ -249,6 +249,14 @@ export function Composer({
     [handleSend]
   );
 
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, []);
+
   const activeModelConfig = getModelById(model);
   const activePersonaConfig = getPersonaById(persona);
 
@@ -328,7 +336,7 @@ export function Composer({
           <textarea
             ref={textareaRef}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleMessageChange}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder={

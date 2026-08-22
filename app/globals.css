@@ -6009,7 +6009,7 @@ body {
   color: var(--text-tertiary);
 }
 
-/* 4. ChatGPT Welcome Screen */
+/* 4. ChatGPT & Gemini Welcome Screen */
 .empty-state-chatgpt {
   flex: 1;
   display: flex;
@@ -6024,40 +6024,162 @@ body {
   z-index: 2;
 }
 
+/* Gemini Ambient Aurora Glow */
+.gemini-aurora-glow {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 360px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(16, 163, 127, 0.18) 0%, rgba(56, 189, 248, 0.12) 40%, rgba(129, 140, 248, 0.06) 60%, transparent 80%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: -1;
+  animation: geminiAuroraPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes geminiAuroraPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+}
+
 .empty-state-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 36px;
+  gap: 12px;
+  margin-bottom: 34px;
   text-align: center;
+  position: relative;
 }
 
-.empty-state-brand-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  color: var(--accent-primary);
-  display: flex;
+.gemini-emblem-wrap {
+  position: relative;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-md);
+  animation: logoZoomOutEntrance 0.85s cubic-bezier(0.19, 1, 0.22, 1) forwards, logoAmbientFloat 4.5s ease-in-out 0.85s infinite alternate;
+  will-change: transform, opacity, filter;
+  cursor: pointer;
+  transition: filter 0.3s ease;
+}
+
+.gemini-emblem-wrap:hover {
+  filter: drop-shadow(0 0 28px rgba(16, 163, 127, 0.65)) drop-shadow(0 0 45px rgba(56, 189, 248, 0.4));
+}
+
+/* Iconic Logo Zoom-Out Entrance Animation */
+@keyframes logoZoomOutEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(2.4) translateY(-14px);
+    filter: blur(14px) drop-shadow(0 0 50px rgba(16, 163, 127, 0.9));
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08) translateY(2px);
+    filter: blur(2px) drop-shadow(0 0 32px rgba(56, 189, 248, 0.6));
+  }
+  75% {
+    transform: scale(0.96) translateY(-1px);
+    filter: blur(0px) drop-shadow(0 0 22px rgba(16, 163, 127, 0.45));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px) drop-shadow(0 0 16px rgba(16, 163, 127, 0.35));
+  }
+}
+
+/* Subtle Continuous Ambient Floating Breath */
+@keyframes logoAmbientFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 16px rgba(16, 163, 127, 0.35));
+  }
+  50% {
+    transform: translateY(-5px) scale(1.04);
+    filter: drop-shadow(0 0 26px rgba(56, 189, 248, 0.55)) drop-shadow(0 0 12px rgba(16, 163, 127, 0.4));
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 16px rgba(16, 163, 127, 0.35));
+  }
 }
 
 .empty-state-main-title {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
-  color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
+}
+
+/* Gemini Gradient Text with Smooth Shimmer */
+.gemini-gradient-title {
+  background: linear-gradient(120deg, var(--text-primary) 0%, #10a37f 30%, #38bdf8 65%, var(--text-primary) 100%);
+  background-size: 240% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: geminiTitleEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both, textShimmerFlow 6s linear infinite;
+}
+
+@keyframes geminiTitleEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes textShimmerFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gemini-subtitle-anim {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  max-width: 480px;
+  margin: 0;
+  line-height: 1.5;
+  animation: geminiFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+}
+
+@keyframes geminiFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .empty-state-cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -6072,23 +6194,41 @@ body {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
   background: var(--bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
-  gap: 4px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 6px;
   width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Staggered Card Entrance Animation */
+.gemini-card-anim {
+  animation: geminiCardSlideUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes geminiCardSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .suggestion-card-chatgpt:hover {
   background: var(--bg-hover);
-  border-color: var(--border-focus);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  border-color: rgba(16, 163, 127, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1), 0 0 16px rgba(16, 163, 127, 0.15);
 }
 
 .suggestion-card-top {
@@ -6098,11 +6238,16 @@ body {
 }
 
 .suggestion-card-icon {
-  font-size: 15px;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.suggestion-card-chatgpt:hover .suggestion-card-icon {
+  transform: scale(1.18);
 }
 
 .suggestion-card-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -6110,7 +6255,7 @@ body {
 .suggestion-card-desc {
   font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
@@ -6599,18 +6744,30 @@ body {
   box-shadow: var(--shadow-xl), 0 0 0 1px var(--accent-primary);
 }
 
+.chatgpt-input-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .chatgpt-composer-textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
   background: transparent;
   border: none;
   outline: none;
   color: var(--text-primary);
-  font-size: 14.5px;
+  font-size: 15px;
   font-family: inherit;
   line-height: 1.5;
   resize: none;
   min-height: 24px;
-  max-height: 160px;
-  padding: 0;
+  max-height: 200px;
+  padding: 2px 0;
+  display: block;
+  word-break: break-word;
+  overflow-y: auto;
 }
 
 .chatgpt-composer-textarea::placeholder {

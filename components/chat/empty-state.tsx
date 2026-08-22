@@ -65,20 +65,32 @@ const SUGGESTIONS: SuggestionCard[] = [
 
 export function EmptyState({ onSuggestion }: EmptyStateProps) {
   return (
-    <div className="empty-state-chatgpt">
+    <div className="empty-state-chatgpt gemini-new-chat-anim">
+      {/* Ambient Gemini-style Aurora Glow */}
+      <div className="gemini-aurora-glow" aria-hidden="true" />
+
       {/* Welcome Hero */}
-      <div className="empty-state-center">
-        <NexoraLogo size={52} withBackground={true} glow={true} />
-        <h1 className="empty-state-main-title">How can I help you today?</h1>
+      <div className="empty-state-center gemini-hero-anim">
+        <div className="gemini-emblem-wrap">
+          <NexoraLogo size={56} withBackground={true} glow={true} />
+          <div className="gemini-sparkle-ring" />
+        </div>
+        <h1 className="empty-state-main-title gemini-gradient-title">
+          How can I help you today?
+        </h1>
+        <p className="gemini-subtitle-anim">
+          Ask questions, write code, analyze architecture, or conduct deep research.
+        </p>
       </div>
 
-      {/* 2x2 Suggestion Cards Grid */}
-      <div className="empty-state-cards-grid">
-        {SUGGESTIONS.map((item) => (
+      {/* 2x2 Suggestion Cards Grid with Staggered Wave */}
+      <div className="empty-state-cards-grid gemini-cards-stagger">
+        {SUGGESTIONS.map((item, idx) => (
           <button
             key={item.id}
             type="button"
-            className="suggestion-card-chatgpt"
+            className="suggestion-card-chatgpt gemini-card-anim"
+            style={{ animationDelay: `${0.12 + idx * 0.08}s` }}
             onClick={() => onSuggestion?.(item.prompt, { model: item.model, persona: item.persona })}
           >
             <div className="suggestion-card-top">
