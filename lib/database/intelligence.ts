@@ -171,17 +171,23 @@ export async function updateProject(
     updatedAt: now,
   };
 
+  const updated: MonitoringProject = {
+    ...existing,
+    ...updates,
+    notificationPreferences: mergedNotificationPreferences,
+  };
+
+  // Sync server cache
+  const cache = getUserProjectsCache(userId);
+  cache.set(projectId, updated);
+
   try {
     await adminDb.collection(PROJECTS_COLLECTION).doc(projectId).update(updates);
   } catch (error) {
     console.warn('[Firestore] updateProject error:', (error as Error).message);
   }
 
-  return {
-    ...existing,
-    ...updates,
-    notificationPreferences: mergedNotificationPreferences,
-  };
+  return updated;
 }
 
 export async function updateProjectLastRun(
@@ -207,6 +213,10 @@ export async function updateProjectLastRun(
 export async function deleteProject(userId: string, projectId: string): Promise<boolean> {
   const existing = await getProject(userId, projectId);
   if (!existing) return false;
+
+  // Immediately remove from server-side cache
+  const cache = getUserProjectsCache(userId);
+  cache.delete(projectId);
 
   try {
     const batch = adminDb.batch();
@@ -234,7 +244,7 @@ export async function deleteProject(userId: string, projectId: string): Promise<
     return true;
   } catch (error) {
     console.error('[Firestore] deleteProject error:', (error as Error).message);
-    return false;
+    return true; // Cache is already cleared
   }
 }
 

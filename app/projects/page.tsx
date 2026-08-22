@@ -85,6 +85,13 @@ export default function ProjectsPage() {
 
   const handleToggleStatus = async (project: MonitoringProject) => {
     const nextStatus = project.status === 'active' ? 'paused' : 'active';
+    // Optimistic UI update
+    setProjects((prev) =>
+      prev.map((p) => (p.id === project.id ? { ...p, status: nextStatus } : p))
+    );
+    setStatusMsg(`Project status changed to ${nextStatus}.`);
+    setTimeout(() => setStatusMsg(null), 3000);
+
     try {
       const token = await getToken();
       if (!token) return;
@@ -97,7 +104,7 @@ export default function ProjectsPage() {
         },
         body: JSON.stringify({ status: nextStatus }),
       });
-      fetchProjects();
+      await refreshProjects();
     } catch {
       // silent
     }
@@ -107,9 +114,14 @@ export default function ProjectsPage() {
     if (!confirm('Are you sure you want to delete this monitoring project and its collected intelligence?')) {
       return;
     }
+    // Optimistic UI removal
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    setStatusMsg('Project deleted successfully.');
+    setTimeout(() => setStatusMsg(null), 3000);
+
     try {
       await deleteProjectAndSync(projectId);
-      fetchProjects();
+      await fetchProjects();
     } catch {
       // silent
     }
