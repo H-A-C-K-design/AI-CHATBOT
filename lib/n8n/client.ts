@@ -32,16 +32,23 @@ export async function sendToN8n(payload: N8nPayload): Promise<N8nResponse> {
       headers['X-Webhook-Secret'] = webhookSecret;
     }
 
+    // Include format fields for standard Webhook, Chat Trigger, and LangChain Agent nodes
+    const bodyData = {
+      ...payload,
+      chatInput: payload.message,
+      input: payload.message,
+      sessionId: payload.conversationId,
+    };
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(bodyData),
       signal: controller.signal,
     });
 
     if (!response.ok) {
       const status = response.status;
-      // Do not leak n8n error details to the user
       console.error(`[n8n] Webhook returned status ${status}`);
       throw new N8nError(
         'N8N_REQUEST_FAILED',
@@ -51,35 +58,42 @@ export async function sendToN8n(payload: N8nPayload): Promise<N8nResponse> {
 
     const data = await response.json();
 
-    // Validate response structure
-    if (!data || typeof data.response !== 'string') {
-      // n8n might return the response in different formats
-      // Try common formats
-      const responseText =
-        data?.response ||
+    // Validate and extract response text from various n8n output formats
+    let responseText = '';
+
+    if (Array.isArray(data) && data.length > 0) {
+      const first = data[0];
+      responseText =
+        first?.output ||
+        first?.response ||
+        first?.text ||
+        first?.message?.content ||
+        first?.message ||
+        (typeof first === 'string' ? first : '');
+    } else if (typeof data === 'object' && data !== null) {
+      responseText =
         data?.output ||
+        data?.response ||
+        data?.message?.content ||
         data?.message ||
         data?.text ||
         data?.result ||
-        (typeof data === 'string' ? data : null);
+        '';
+    } else if (typeof data === 'string') {
+      responseText = data;
+    }
 
-      if (!responseText) {
-        console.error('[n8n] Unexpected response format:', JSON.stringify(data).substring(0, 200));
-        throw new N8nError(
-          'N8N_INVALID_RESPONSE',
-          'Received an unexpected response from the AI service.'
-        );
-      }
-
-      return {
-        response: String(responseText),
-        title: data?.title,
-      };
+    if (!responseText) {
+      console.error('[n8n] Unexpected response format:', JSON.stringify(data).substring(0, 200));
+      throw new N8nError(
+        'N8N_INVALID_RESPONSE',
+        'Received an unexpected response from the AI service.'
+      );
     }
 
     return {
-      response: data.response,
-      title: data.title,
+      response: String(responseText),
+      title: data?.title || (Array.isArray(data) ? data[0]?.title : undefined),
     };
   } catch (error) {
     if (error instanceof N8nError) throw error;

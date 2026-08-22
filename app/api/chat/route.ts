@@ -22,6 +22,7 @@ import {
 } from '@/lib/database/intelligence';
 import { sendToOpenAI } from '@/lib/ai/openai';
 import { sendToGemini } from '@/lib/ai/gemini';
+import { sendToN8n } from '@/lib/n8n/client';
 import type { ChatResponse, ApiError } from '@/types';
 
 export async function POST(
@@ -137,11 +138,34 @@ export async function POST(
       }
     }
 
-    // 8. Generate AI Response (Gemini / OpenAI)
+    // 8. Generate AI Response (n8n Agent / Gemini / OpenAI)
     let aiResponseText = '';
     let aiResponseTitle: string | undefined;
 
-    if (process.env.GEMINI_API_KEY) {
+    if (process.env.N8N_WEBHOOK_URL) {
+      try {
+        const n8nResult = await sendToN8n({
+          conversationId,
+          message: augmentedMessage,
+          history,
+        });
+        aiResponseText = n8nResult.response;
+        aiResponseTitle = n8nResult.title;
+      } catch (err: unknown) {
+        console.warn('[AI] n8n webhook error, falling back to direct LLM:', (err as Error).message);
+        if (process.env.GEMINI_API_KEY) {
+          const geminiResult = await sendToGemini(augmentedMessage, history);
+          aiResponseText = geminiResult.response;
+          aiResponseTitle = geminiResult.title;
+        } else if (process.env.OPENAI_API_KEY) {
+          const openAiResult = await sendToOpenAI(augmentedMessage, history);
+          aiResponseText = openAiResult.response;
+          aiResponseTitle = openAiResult.title;
+        } else {
+          throw err;
+        }
+      }
+    } else if (process.env.GEMINI_API_KEY) {
       try {
         const geminiResult = await sendToGemini(augmentedMessage, history);
         aiResponseText = geminiResult.response;
@@ -162,7 +186,7 @@ export async function POST(
       aiResponseTitle = openAiResult.title;
     } else {
       throw new Error(
-        'No AI API key configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in .env.local.'
+        'No AI API key or n8n webhook configured. Please set N8N_WEBHOOK_URL, GEMINI_API_KEY, or OPENAI_API_KEY in .env.local.'
       );
     }
 
