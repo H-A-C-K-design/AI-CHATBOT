@@ -79,14 +79,22 @@ export function ChatContainer({
       try {
         data = JSON.parse(rawText);
       } catch {
-        setError(rawText || `Server returned error (${response.status})`);
+        if (response.status === 401) {
+          setError('Your session expired. Please refresh the page or sign in again.');
+        } else {
+          setError(rawText || `Server returned error (${response.status})`);
+        }
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
         return;
       }
 
       if (!data.success) {
         const apiError = data as ApiError;
-        setError(apiError.error?.message || 'Failed to generate response.');
+        if (response.status === 401) {
+          setError('Authentication expired. Please refresh the page or sign in again.');
+        } else {
+          setError(apiError.error?.message || 'Failed to generate response.');
+        }
         // Remove the optimistic message on error
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
         return;
