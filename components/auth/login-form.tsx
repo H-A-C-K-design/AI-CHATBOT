@@ -102,7 +102,8 @@ export function LoginForm() {
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         setError('An account already exists with this email using a different sign-in provider.');
       } else if (error.code === 'auth/unauthorized-domain') {
-        setError('This domain is not authorized in Firebase Console > Authentication > Settings.');
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+        setError(`Domain "${domain}" is not authorized in Firebase Console > Authentication > Settings > Authorized domains. Alternatively, sign in using Email & Password below.`);
       } else {
         setError('Unable to complete Google sign-in. Please try again or use email sign-in.');
       }
@@ -127,7 +128,8 @@ export function LoginForm() {
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         setError('An account already exists with this email using a different sign-in provider.');
       } else if (error.code === 'auth/unauthorized-domain') {
-        setError('This domain is not authorized in Firebase Console > Authentication > Settings.');
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+        setError(`Domain "${domain}" is not authorized in Firebase Console > Authentication > Settings > Authorized domains. Alternatively, sign in using Email & Password below.`);
       } else {
         setError('Unable to complete GitHub sign-in. Please verify your OAuth settings.');
       }
