@@ -128,7 +128,7 @@ export function ProjectWizard() {
     try {
       // Create project in Firestore database and save in project session
       const newProj = await createAndActivateProject(formData);
-      router.push(`/intelligence?projectId=${newProj.id}`);
+      router.push('/projects');
     } catch (err) {
       setError((err as Error).message);
     } finally {

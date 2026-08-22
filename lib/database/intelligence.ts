@@ -25,6 +25,16 @@ const INSIGHTS_COLLECTION = 'intelligence_insights';
 const ALERTS_COLLECTION = 'intelligence_alerts';
 const REPORTS_COLLECTION = 'intelligence_reports';
 
+// Resilient Server-Side Memory Cache for projects
+const serverProjectsCache: Map<string, Map<string, MonitoringProject>> = new Map();
+
+function getUserProjectsCache(userId: string): Map<string, MonitoringProject> {
+  if (!serverProjectsCache.has(userId)) {
+    serverProjectsCache.set(userId, new Map());
+  }
+  return serverProjectsCache.get(userId)!;
+}
+
 // ============================================================
 // 1. Projects CRUD
 // ============================================================
@@ -60,6 +70,11 @@ export async function createProject(
     updatedAt: now,
   };
 
+  // 1. Store in server-side cache
+  const cache = getUserProjectsCache(userId);
+  cache.set(id, project);
+
+  // 2. Persist to Firestore DB
   try {
     await adminDb.collection(PROJECTS_COLLECTION).doc(id).set(project);
   } catch (error) {
@@ -70,22 +85,38 @@ export async function createProject(
 }
 
 export async function getProjects(userId: string): Promise<MonitoringProject[]> {
+  const cache = getUserProjectsCache(userId);
+  const cachedProjects = Array.from(cache.values());
+
   try {
     const snapshot = await adminDb
       .collection(PROJECTS_COLLECTION)
       .where('userId', '==', userId)
       .get();
 
-    const projects = snapshot.docs.map((doc) => doc.data() as MonitoringProject);
+    const dbProjects = snapshot.docs.map((doc) => doc.data() as MonitoringProject);
 
-    return projects.sort((a, b) => {
+    // Sync DB projects into cache
+    dbProjects.forEach((p) => cache.set(p.id, p));
+
+    const allProjectsMap = new Map<string, MonitoringProject>();
+    cachedProjects.forEach((p) => allProjectsMap.set(p.id, p));
+    dbProjects.forEach((p) => allProjectsMap.set(p.id, p));
+
+    const combined = Array.from(allProjectsMap.values());
+
+    return combined.sort((a, b) => {
       const timeA = new Date(a.updatedAt || a.createdAt).getTime();
       const timeB = new Date(b.updatedAt || b.createdAt).getTime();
       return timeB - timeA;
     });
   } catch (error) {
-    console.warn('[Firestore] getProjects error:', (error as Error).message);
-    return [];
+    console.warn('[Firestore] getProjects error (returning cache):', (error as Error).message);
+    return cachedProjects.sort((a, b) => {
+      const timeA = new Date(a.updatedAt || a.createdAt).getTime();
+      const timeB = new Date(b.updatedAt || b.createdAt).getTime();
+      return timeB - timeA;
+    });
   }
 }
 
@@ -93,6 +124,10 @@ export async function getProject(
   userId: string,
   projectId: string
 ): Promise<MonitoringProject | null> {
+  const cache = getUserProjectsCache(userId);
+  const cached = cache.get(projectId);
+  if (cached) return cached;
+
   try {
     const doc = await adminDb.collection(PROJECTS_COLLECTION).doc(projectId).get();
     if (!doc.exists) return null;
@@ -100,6 +135,7 @@ export async function getProject(
     const project = doc.data() as MonitoringProject;
     if (project.userId !== userId) return null;
 
+    cache.set(projectId, project);
     return project;
   } catch (error) {
     console.warn('[Firestore] getProject error:', (error as Error).message);

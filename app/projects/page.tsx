@@ -15,16 +15,23 @@ import type { MonitoringProject } from '@/types';
 export default function ProjectsPage() {
   const router = useRouter();
   const { getToken } = useAuth();
-  const { createAndActivateProject, deleteProjectAndSync } = useProjectSession();
+  const { projects: contextProjects, createAndActivateProject, deleteProjectAndSync, refreshProjects } = useProjectSession();
 
-  const [projects, setProjects] = useState<MonitoringProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<MonitoringProject[]>(contextProjects);
+  const [loading, setLoading] = useState(contextProjects.length === 0);
   const [runningId, setRunningId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
+  // Sync with context projects
+  useEffect(() => {
+    if (contextProjects.length > 0) {
+      setProjects(contextProjects);
+      setLoading(false);
+    }
+  }, [contextProjects]);
+
   const fetchProjects = useCallback(async () => {
     try {
-      setLoading(true);
       const token = await getToken();
       if (!token) return;
 
@@ -44,7 +51,8 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    refreshProjects();
+  }, [fetchProjects, refreshProjects]);
 
   const handleRunProject = async (projectId: string) => {
     setRunningId(projectId);

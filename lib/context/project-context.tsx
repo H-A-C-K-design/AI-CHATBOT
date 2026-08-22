@@ -10,6 +10,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import type { MonitoringProject, CreateProjectInput } from '@/types';
 
 const STORAGE_KEY_ACTIVE_PROJECT = 'nexora_active_project_id';
+const STORAGE_KEY_PROJECTS = 'nexora_user_projects';
 
 interface ProjectContextValue {
   projects: MonitoringProject[];
@@ -30,12 +31,23 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Initialize active project from localStorage on mount
+  // Initialize active project and cached projects from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_PROJECT);
-      if (saved) {
-        setActiveProjectIdState(saved);
+      const savedActive = localStorage.getItem(STORAGE_KEY_ACTIVE_PROJECT);
+      if (savedActive) {
+        setActiveProjectIdState(savedActive);
+      }
+      try {
+        const savedProjects = localStorage.getItem(STORAGE_KEY_PROJECTS);
+        if (savedProjects) {
+          const parsed = JSON.parse(savedProjects);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProjects(parsed);
+          }
+        }
+      } catch {
+        // ignore parse error
       }
     }
   }, []);
@@ -71,6 +83,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       if (data.success && Array.isArray(data.projects)) {
         const fetched: MonitoringProject[] = data.projects;
         setProjects(fetched);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(fetched));
+        }
 
         // Auto-select project if current activeProjectId is invalid or empty
         if (fetched.length > 0) {
@@ -125,7 +140,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newProj: MonitoringProject = data.project;
 
       // 1. Update project list and session
-      setProjects((prev) => [newProj, ...prev.filter((p) => p.id !== newProj.id)]);
+      setProjects((prev) => {
+        const updated = [newProj, ...prev.filter((p) => p.id !== newProj.id)];
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(updated));
+        }
+        return updated;
+      });
       setActiveProjectId(newProj.id);
 
       // 2. Trigger asynchronous ingestion run for the new project
@@ -152,6 +173,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
       setProjects((prev) => {
         const remaining = prev.filter((p) => p.id !== projectId);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(remaining));
+        }
         if (activeProjectId === projectId) {
           const nextId = remaining.length > 0 ? remaining[0].id : null;
           setActiveProjectId(nextId);
