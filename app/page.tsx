@@ -308,8 +308,14 @@ async def authenticate_jwt(request: Request):
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto my-6 px-4">
-          <div className="p-5 rounded-2xl border border-violet-500/30 bg-violet-950/10 backdrop-blur-md space-y-2">
-            <div className="text-3xl">⚡</div>
+          <div className="p-5 rounded-2xl border border-violet-500/30 bg-violet-950/10 backdrop-blur-md space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-300 flex items-center justify-center border border-violet-500/30">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                <polyline points="2 17 12 22 22 17" />
+                <polyline points="2 12 12 17 22 12" />
+              </svg>
+            </div>
             <h3 className="font-bold text-sm text-violet-300">Lead Orchestrator</h3>
             <p className="text-xs text-muted-foreground">
               Deconstructs user queries, identifies required domains, plans the collaborative pipeline, and synthesizes the final response.
@@ -319,8 +325,15 @@ async def authenticate_jwt(request: Request):
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 backdrop-blur-md space-y-2">
-            <div className="text-3xl">🔬</div>
+          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 backdrop-blur-md space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg>
+            </div>
             <h3 className="font-bold text-sm text-emerald-300">Research Analyst</h3>
             <p className="text-xs text-muted-foreground">
               Analyzes papers, patents, arXiv, competitive intelligence, trends, and provides factual citation grounding.
@@ -330,8 +343,13 @@ async def authenticate_jwt(request: Request):
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-blue-500/30 bg-blue-950/10 backdrop-blur-md space-y-2">
-            <div className="text-3xl">💻</div>
+          <div className="p-5 rounded-2xl border border-blue-500/30 bg-blue-950/10 backdrop-blur-md space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-500/30">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+            </div>
             <h3 className="font-bold text-sm text-blue-300">Code Engineer</h3>
             <p className="text-xs text-muted-foreground">
               Writes production-grade code, handles debugging, type safety, algorithms, and distributed systems architecture.
@@ -341,8 +359,13 @@ async def authenticate_jwt(request: Request):
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 backdrop-blur-md space-y-2">
-            <div className="text-3xl">🛡️</div>
+          <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 backdrop-blur-md space-y-2.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+            </div>
             <h3 className="font-bold text-sm text-amber-300">Security Critic</h3>
             <p className="text-xs text-muted-foreground">
               Audits outputs for OWASP flaws, hallucinations, rate limits, edge cases, and issues security seals.

@@ -11,6 +11,36 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SPECIALIZED_AGENTS } from '@/lib/ai/multi-agent';
 import type { AgentId, AgentStep } from '@/types';
 
+const AGENT_VECTOR_ICONS: Record<AgentId, React.ReactNode> = {
+  'lead-orchestrator': (
+    <svg className="w-6 h-6 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  ),
+  'research-analyst': (
+    <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="11" y1="8" x2="11" y2="14" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  ),
+  'code-engineer': (
+    <svg className="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  ),
+  'security-critic': (
+    <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  ),
+};
+
 export default function MultiAgentArchitecturePage() {
   const [selectedAgent, setSelectedAgent] = useState<AgentId>('lead-orchestrator');
   const [demoPrompt, setDemoPrompt] = useState(
@@ -254,13 +284,13 @@ Security Seal: APPROVED (98/100)`,
                       }`}
                     >
                       <div
-                        className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-xl transition border-2 ${
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition border-2 ${
                           isCurrent
                             ? 'bg-violet-600/30 border-violet-400 shadow-violet-500/40 ring-4 ring-violet-500/20'
                             : 'bg-zinc-900 border-white/10 hover:border-white/30'
                         }`}
                       >
-                        <span>{agent.icon}</span>
+                        {AGENT_VECTOR_ICONS[agent.id]}
                       </div>
 
                       <div className="mt-3 text-center">
@@ -300,7 +330,9 @@ Security Seal: APPROVED (98/100)`,
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{agent.icon}</span>
+                        <div className="p-2 rounded-lg bg-white/[0.05]">
+                          {AGENT_VECTOR_ICONS[agent.id]}
+                        </div>
                         <div>
                           <div className="text-xs font-bold text-zinc-100">{agent.name}</div>
                           <div className="text-[11px] text-zinc-400 line-clamp-1">{agent.role}</div>
@@ -316,7 +348,9 @@ Security Seal: APPROVED (98/100)`,
             <div className="lg:col-span-2 rounded-2xl border border-border/50 bg-card/40 p-6 backdrop-blur-md space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{currentAgent.icon}</span>
+                  <div className="p-2.5 rounded-xl bg-white/[0.06] border border-white/10">
+                    {AGENT_VECTOR_ICONS[currentAgent.id]}
+                  </div>
                   <div>
                     <h3 className="text-base font-bold">{currentAgent.name}</h3>
                     <p className="text-xs text-muted-foreground">{currentAgent.role}</p>
