@@ -51,8 +51,12 @@ export function Composer({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
+    if (!message) {
+      textarea.style.height = '24px';
+      return;
+    }
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
   }, [message]);
 
   // Focus textarea on mount
@@ -255,48 +259,50 @@ export function Composer({
           </div>
         </div>
 
-        {/* Input Textarea */}
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={`Ask ${activeModelConfig.name} anything... (Type code, questions, or paste errors)`}
-          className="composer-textarea"
-          rows={1}
-          disabled={disabled}
-          aria-label="Message input"
-          id="composer-textarea"
-        />
+        {/* Input Row: Textarea + Action Button */}
+        <div className="composer-input-row">
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={`Ask ${activeModelConfig.name} anything... (Type code, questions, or paste errors)`}
+            className="composer-textarea"
+            rows={1}
+            disabled={disabled}
+            aria-label="Message input"
+            id="composer-textarea"
+          />
 
-        {/* Action Controls */}
-        <div className="composer-actions">
-          {isLoading && onStop ? (
-            <button
-              onClick={onStop}
-              className="composer-btn composer-btn-stop"
-              type="button"
-              aria-label="Stop generating"
-              title="Stop generating response"
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="3" y="3" width="10" height="10" rx="2" />
-              </svg>
-            </button>
-          ) : (
-            <button
-              onClick={handleSend}
-              disabled={!message.trim() || isLoading || disabled}
-              className="composer-btn composer-btn-send"
-              type="button"
-              aria-label="Send message"
-              title="Send message"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
+          {/* Action Controls */}
+          <div className="composer-actions">
+            {isLoading && onStop ? (
+              <button
+                onClick={onStop}
+                className="composer-btn composer-btn-stop"
+                type="button"
+                aria-label="Stop generating"
+                title="Stop generating response"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="3" y="3" width="10" height="10" rx="2" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={!message.trim() || isLoading || disabled}
+                className="composer-btn composer-btn-send"
+                type="button"
+                aria-label="Send message"
+                title="Send message"
+              >
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
