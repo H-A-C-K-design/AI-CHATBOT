@@ -11,7 +11,7 @@ export interface AppUser {
   provider: string;
 }
 
-// --- Conversation ---
+// --- Conversation & History Session ---
 export interface Conversation {
   id: string;
   userId: string;
@@ -20,16 +20,25 @@ export interface Conversation {
   updatedAt: string; // ISO string
   model?: string;
   persona?: string;
+  isPinned?: boolean;
+  messageCount?: number;
+  lastMessageSnippet?: string;
+  tags?: string[];
 }
 
 export interface CreateConversationInput {
   title?: string;
   model?: string;
   persona?: string;
+  isPinned?: boolean;
+  tags?: string[];
+  initialPrompt?: string;
 }
 
 export interface UpdateConversationInput {
-  title: string;
+  title?: string;
+  isPinned?: boolean;
+  tags?: string[];
 }
 
 // --- Multi-AI Models & Providers ---

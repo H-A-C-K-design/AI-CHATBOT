@@ -8,7 +8,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 const CONVERSATIONS_COLLECTION = 'conversations';
 
 /**
- * Create a new conversation for a user.
+ * Create a new conversation / history session for a user.
  */
 export async function createConversation(
   userId: string,
@@ -20,7 +20,13 @@ export async function createConversation(
   const conversation: Conversation = {
     id,
     userId,
-    title: input?.title || 'New conversation',
+    title: input?.title?.trim() || 'New conversation',
+    model: input?.model || 'gemini-3.5-flash',
+    persona: input?.persona || 'general-assistant',
+    isPinned: input?.isPinned || false,
+    tags: input?.tags || [],
+    messageCount: 0,
+    lastMessageSnippet: '',
     createdAt: now,
     updatedAt: now,
   };
@@ -36,7 +42,7 @@ export async function createConversation(
 }
 
 /**
- * Get all conversations for a user, sorted by updatedAt descending.
+ * Get all conversations for a user, sorted by pinned status and updatedAt descending.
  */
 export async function getConversations(userId: string): Promise<Conversation[]> {
   try {
@@ -47,8 +53,10 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
 
     const conversations = snapshot.docs.map((doc) => doc.data() as Conversation);
     
-    // Sort in-memory to prevent index precondition errors
+    // Sort pinned conversations first, then newest updatedAt
     return conversations.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
       const timeA = new Date(a.updatedAt || a.createdAt).getTime();
       const timeB = new Date(b.updatedAt || b.createdAt).getTime();
       return timeB - timeA;
@@ -85,7 +93,7 @@ export async function getConversation(
 }
 
 /**
- * Update a conversation (e.g. rename). Enforces user ownership.
+ * Update a conversation (e.g. rename, pin/unpin, tags). Enforces user ownership.
  */
 export async function updateConversation(
   userId: string,
@@ -95,10 +103,13 @@ export async function updateConversation(
   const existing = await getConversation(userId, conversationId);
   if (!existing) return null;
 
-  const updates = {
-    title: input.title,
+  const updates: Partial<Conversation> = {
     updatedAt: new Date().toISOString(),
   };
+
+  if (input.title !== undefined) updates.title = input.title.trim();
+  if (input.isPinned !== undefined) updates.isPinned = input.isPinned;
+  if (input.tags !== undefined) updates.tags = input.tags;
 
   try {
     await adminDb
@@ -113,14 +124,23 @@ export async function updateConversation(
 }
 
 /**
- * Update only the updatedAt timestamp (used when new messages are added).
+ * Update only the updatedAt timestamp and last message snippet (when messages are added).
  */
-export async function touchConversation(conversationId: string): Promise<void> {
+export async function touchConversation(
+  conversationId: string,
+  lastSnippet?: string
+): Promise<void> {
   try {
+    const updates: Record<string, unknown> = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (lastSnippet) {
+      updates.lastMessageSnippet = lastSnippet.slice(0, 160);
+    }
     await adminDb
       .collection(CONVERSATIONS_COLLECTION)
       .doc(conversationId)
-      .update({ updatedAt: new Date().toISOString() });
+      .update(updates);
   } catch (error) {
     console.warn('[Firestore] touchConversation:', (error as Error).message);
   }
