@@ -37,7 +37,7 @@ export function ChatContainer({
     setError(null);
   }, [conversationId, initialMessages]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, agentMode: import('@/types').AgentMode = 'swarm') => {
     setError(null);
     setIsLoading(true);
 
@@ -47,6 +47,7 @@ export function ChatContainer({
       conversationId: currentConvIdRef.current || '',
       role: 'user',
       content,
+      agentMode,
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, tempUserMessage]);
@@ -70,6 +71,7 @@ export function ChatContainer({
         body: JSON.stringify({
           conversationId: currentConvIdRef.current || undefined,
           message: content,
+          agentMode,
         }),
         signal: abortControllerRef.current.signal,
       });

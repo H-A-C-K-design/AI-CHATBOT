@@ -45,6 +45,7 @@ export function Sidebar({
 
   const isChatRoute = pathname.startsWith('/chat');
   const isIntelRoute = pathname.startsWith('/intelligence');
+  const isAgentsRoute = pathname.startsWith('/agents');
   const isProjectsRoute = pathname.startsWith('/projects');
   const isReportsRoute = pathname.startsWith('/reports');
   const isSettingsRoute = pathname.startsWith('/settings');
@@ -269,7 +270,24 @@ export function Sidebar({
             )}
           </div>
 
-          {/* 3. Projects */}
+          {/* 3. Multi-Agent System */}
+          <Link
+            href="/agents"
+            className={`nav-module-link ${isAgentsRoute ? 'nav-module-link-active' : ''}`}
+            onClick={onClose}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <div className="flex items-center justify-between flex-1">
+              <span>Multi-Agent System</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-violet-500/20 text-violet-300 font-semibold">
+                4 Active
+              </span>
+            </div>
+          </Link>
+
+          {/* 4. Projects */}
           <Link
             href="/projects"
             className={`nav-module-link ${isProjectsRoute ? 'nav-module-link-active' : ''}`}

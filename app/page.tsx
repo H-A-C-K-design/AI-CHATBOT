@@ -80,10 +80,13 @@ LIMIT 20;`,
           </Link>
 
           <nav className="landing-nav-links">
+            <Link href="/agents" className="landing-nav-link text-violet-400 font-semibold flex items-center gap-1">
+              <span>⚡</span> Multi-Agent
+            </Link>
             <Link href="/intelligence" className="landing-nav-link">Intelligence</Link>
             <a href="#features" className="landing-nav-link">Features</a>
+            <a href="#multi-agent" className="landing-nav-link">Agents</a>
             <a href="#code-demo" className="landing-nav-link">Capabilities</a>
-            <a href="#architecture" className="landing-nav-link">Architecture</a>
           </nav>
 
           <div className="landing-nav-actions">
@@ -289,6 +292,77 @@ async def authenticate_jwt(request: Request):
               Built-in sliding-window rate limiters, request payload validation with Zod v4, and comprehensive defensive headers.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Multi-Agent Architecture Showcase */}
+      <section id="multi-agent" className="landing-section">
+        <div className="section-header">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30 mb-3">
+            <span>⚡</span> Multi-Agent Architecture
+          </span>
+          <h2 className="section-title">4 Specialized Autonomous Agents</h2>
+          <p className="section-subtitle">
+            Harnessing structured inter-agent handoffs, automated delegation, and security consensus verification.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto my-6 px-4">
+          <div className="p-5 rounded-2xl border border-violet-500/30 bg-violet-950/10 backdrop-blur-md space-y-2">
+            <div className="text-3xl">⚡</div>
+            <h3 className="font-bold text-sm text-violet-300">Lead Orchestrator</h3>
+            <p className="text-xs text-muted-foreground">
+              Deconstructs user queries, identifies required domains, plans the collaborative pipeline, and synthesizes the final response.
+            </p>
+            <div className="text-[11px] font-mono text-violet-400/80 bg-violet-500/10 px-2 py-1 rounded">
+              Topology &amp; Handoff
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 backdrop-blur-md space-y-2">
+            <div className="text-3xl">🔬</div>
+            <h3 className="font-bold text-sm text-emerald-300">Research Analyst</h3>
+            <p className="text-xs text-muted-foreground">
+              Analyzes papers, patents, arXiv, competitive intelligence, trends, and provides factual citation grounding.
+            </p>
+            <div className="text-[11px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-1 rounded">
+              arXiv &amp; Patent Intel
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-blue-500/30 bg-blue-950/10 backdrop-blur-md space-y-2">
+            <div className="text-3xl">💻</div>
+            <h3 className="font-bold text-sm text-blue-300">Code Engineer</h3>
+            <p className="text-xs text-muted-foreground">
+              Writes production-grade code, handles debugging, type safety, algorithms, and distributed systems architecture.
+            </p>
+            <div className="text-[11px] font-mono text-blue-400/80 bg-blue-500/10 px-2 py-1 rounded">
+              Type-Safe Architecture
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 backdrop-blur-md space-y-2">
+            <div className="text-3xl">🛡️</div>
+            <h3 className="font-bold text-sm text-amber-300">Security Critic</h3>
+            <p className="text-xs text-muted-foreground">
+              Audits outputs for OWASP flaws, hallucinations, rate limits, edge cases, and issues security seals.
+            </p>
+            <div className="text-[11px] font-mono text-amber-400/80 bg-amber-500/10 px-2 py-1 rounded">
+              OWASP &amp; Logic Audit
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mt-6">
+          <Link
+            href="/agents"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-lg shadow-violet-600/20 transition"
+          >
+            <span>Explore Multi-Agent Interactive Topology &amp; Sandbox</span>
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 3L11 8L6 13" />
+            </svg>
+          </Link>
         </div>
       </section>
 

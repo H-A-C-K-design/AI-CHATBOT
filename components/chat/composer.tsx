@@ -4,9 +4,11 @@
 // Composer — Message Input Component
 // ============================================================
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { AgentSelector } from './agent-selector';
+import type { AgentMode } from '@/types';
 
 interface ComposerProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, agentMode?: AgentMode) => void;
   isLoading: boolean;
   onStop?: () => void;
   disabled?: boolean;
@@ -14,6 +16,7 @@ interface ComposerProps {
 
 export function Composer({ onSend, isLoading, onStop, disabled }: ComposerProps) {
   const [message, setMessage] = useState('');
+  const [agentMode, setAgentMode] = useState<AgentMode>('swarm');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -32,13 +35,13 @@ export function Composer({ onSend, isLoading, onStop, disabled }: ComposerProps)
   const handleSend = useCallback(() => {
     const trimmed = message.trim();
     if (!trimmed || isLoading || disabled) return;
-    onSend(trimmed);
+    onSend(trimmed, agentMode);
     setMessage('');
     // Reset height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-  }, [message, isLoading, disabled, onSend]);
+  }, [message, agentMode, isLoading, disabled, onSend]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -52,6 +55,11 @@ export function Composer({ onSend, isLoading, onStop, disabled }: ComposerProps)
 
   return (
     <div className="composer-wrapper">
+      <AgentSelector
+        currentMode={agentMode}
+        onSelectMode={setAgentMode}
+        disabled={isLoading || disabled}
+      />
       <div className="composer">
         <textarea
           ref={textareaRef}

@@ -28,6 +28,36 @@ export interface UpdateConversationInput {
   title: string;
 }
 
+// --- Multi-Agent Architecture ---
+export type AgentId =
+  | 'lead-orchestrator'
+  | 'research-analyst'
+  | 'code-engineer'
+  | 'security-critic';
+
+export type AgentMode = 'swarm' | AgentId;
+
+export interface AgentStep {
+  agentId: AgentId;
+  agentName: string;
+  role: string;
+  title: string;
+  content: string;
+  durationMs: number;
+  status: 'completed' | 'running' | 'failed';
+}
+
+export interface AgentDefinition {
+  id: AgentId;
+  name: string;
+  role: string;
+  description: string;
+  icon: string;
+  color: string;
+  capabilities: string[];
+  systemInstruction: string;
+}
+
 // --- Message ---
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -37,12 +67,15 @@ export interface Message {
   role: MessageRole;
   content: string;
   createdAt: string; // ISO string
+  agentSteps?: AgentStep[];
+  agentMode?: AgentMode;
 }
 
 // --- Chat API ---
 export interface ChatRequest {
   conversationId?: string; // omit to create new conversation
   message: string;
+  agentMode?: AgentMode;
 }
 
 export interface ChatResponse {
@@ -50,6 +83,7 @@ export interface ChatResponse {
   conversationId: string;
   message: Message;
   title?: string; // included when a new title is auto-generated
+  agentSteps?: AgentStep[];
 }
 
 // --- n8n ---

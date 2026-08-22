@@ -86,7 +86,7 @@ export async function POST(
       );
     }
 
-    const { message: rawMessage, conversationId: requestedConvId } = parseResult.data;
+    const { message: rawMessage, conversationId: requestedConvId, agentMode = 'swarm' } = parseResult.data;
     const message = sanitizeInput(rawMessage);
 
     // 5. Conversation management (Fault-tolerant)
@@ -112,7 +112,7 @@ export async function POST(
 
     // 6. Persist user message (Fault-tolerant)
     try {
-      await createMessage(conversationId, 'user', message);
+      await createMessage(conversationId, 'user', message, undefined, agentMode);
     } catch (err) {
       console.warn('[/api/chat] User message persist warning:', (err as Error).message);
     }
@@ -131,9 +131,9 @@ export async function POST(
 
     // Detect if the user query is asking for research, patents, competitor intel, trends, or project monitoring
     const isIntelQuery = isIntelligenceIntent(message);
-    let augmentedMessage = message;
+    let intelContext = '';
 
-    if (isIntelQuery) {
+    if (isIntelQuery || agentMode === 'research-analyst' || agentMode === 'swarm') {
       try {
         const [items, projects, trends, alerts] = await Promise.all([
           getIntelligenceItems(userId, { searchQuery: extractKeywords(message), limit: 8 }),
@@ -143,64 +143,91 @@ export async function POST(
         ]);
 
         if (items.length > 0 || projects.length > 0) {
-          const intelContext = formatIntelligenceContext(items, projects, trends, alerts);
-          augmentedMessage = `${message}\n\n${intelContext}`;
+          intelContext = formatIntelligenceContext(items, projects, trends, alerts);
         }
       } catch (err) {
         console.warn('[/api/chat] Intelligence RAG retrieval warning:', (err as Error).message);
       }
     }
 
-    // 8. Generate AI Response (n8n Agent / Gemini / OpenAI)
+    // 8. Generate AI Response (Multi-Agent Swarm / Specialized Agent / n8n / direct LLM)
     let aiResponseText = '';
     let aiResponseTitle: string | undefined;
+    let agentSteps: import('@/types').AgentStep[] | undefined;
 
-    if (process.env.N8N_WEBHOOK_URL) {
+    const { runMultiAgentOrchestration, runSpecializedAgent } = await import('@/lib/ai/multi-agent');
+
+    if (agentMode === 'swarm') {
+      // Full Multi-Agent Swarm: Orchestrator -> Research Agent -> Code Engineer -> Security Critic -> Synthesis
       try {
-        const n8nResult = await sendToN8n({
-          conversationId,
-          message: augmentedMessage,
-          history,
-        });
-        aiResponseText = n8nResult.response;
-        aiResponseTitle = n8nResult.title;
-      } catch (err: unknown) {
-        console.warn('[AI] n8n webhook error, falling back to direct LLM:', (err as Error).message);
-        if (process.env.GEMINI_API_KEY) {
+        const swarmResult = await runMultiAgentOrchestration(message, history, intelContext);
+        aiResponseText = swarmResult.finalResponse;
+        agentSteps = swarmResult.agentSteps;
+        aiResponseTitle = swarmResult.title;
+      } catch (swarmErr) {
+        console.warn('[Chat] Multi-Agent Swarm error, falling back to direct LLM:', (swarmErr as Error).message);
+      }
+    } else if (agentMode) {
+      // Direct Specialized Agent Execution
+      try {
+        const singleAgentResult = await runSpecializedAgent(agentMode, message, history, intelContext);
+        aiResponseText = singleAgentResult.response;
+        agentSteps = singleAgentResult.agentSteps;
+      } catch (agentErr) {
+        console.warn('[Chat] Specialized Agent error, falling back to direct LLM:', (agentErr as Error).message);
+      }
+    }
+
+    // Fallback to n8n / Gemini / OpenAI if multi-agent was bypassed or errored
+    if (!aiResponseText) {
+      const augmentedMessage = intelContext ? `${message}\n\n${intelContext}` : message;
+      if (process.env.N8N_WEBHOOK_URL) {
+        try {
+          const n8nResult = await sendToN8n({
+            conversationId,
+            message: augmentedMessage,
+            history,
+          });
+          aiResponseText = n8nResult.response;
+          aiResponseTitle = n8nResult.title;
+        } catch (err: unknown) {
+          console.warn('[AI] n8n webhook error, falling back to direct LLM:', (err as Error).message);
+          if (process.env.GEMINI_API_KEY) {
+            const geminiResult = await sendToGemini(augmentedMessage, history);
+            aiResponseText = geminiResult.response;
+            aiResponseTitle = geminiResult.title;
+          } else if (process.env.OPENAI_API_KEY) {
+            const openAiResult = await sendToOpenAI(augmentedMessage, history);
+            aiResponseText = openAiResult.response;
+            aiResponseTitle = openAiResult.title;
+          } else {
+            throw err;
+          }
+        }
+      } else if (process.env.GEMINI_API_KEY) {
+        try {
           const geminiResult = await sendToGemini(augmentedMessage, history);
           aiResponseText = geminiResult.response;
           aiResponseTitle = geminiResult.title;
-        } else if (process.env.OPENAI_API_KEY) {
-          const openAiResult = await sendToOpenAI(augmentedMessage, history);
-          aiResponseText = openAiResult.response;
-          aiResponseTitle = openAiResult.title;
-        } else {
-          throw err;
+        } catch (err: unknown) {
+          if (process.env.OPENAI_API_KEY) {
+            console.warn('[AI] Gemini error, trying OpenAI:', (err as Error).message);
+            const openAiResult = await sendToOpenAI(augmentedMessage, history);
+            aiResponseText = openAiResult.response;
+            aiResponseTitle = openAiResult.title;
+          } else {
+            throw err;
+          }
         }
+      } else if (process.env.OPENAI_API_KEY) {
+        const openAiResult = await sendToOpenAI(augmentedMessage, history);
+        aiResponseText = openAiResult.response;
+        aiResponseTitle = openAiResult.title;
+      } else {
+        throw new Error(
+          'No AI API key or n8n webhook configured. Please set N8N_WEBHOOK_URL, GEMINI_API_KEY, or OPENAI_API_KEY in .env.local.'
+        );
       }
-    } else if (process.env.GEMINI_API_KEY) {
-      try {
-        const geminiResult = await sendToGemini(augmentedMessage, history);
-        aiResponseText = geminiResult.response;
-        aiResponseTitle = geminiResult.title;
-      } catch (err: unknown) {
-        if (process.env.OPENAI_API_KEY) {
-          console.warn('[AI] Gemini error, trying OpenAI:', (err as Error).message);
-          const openAiResult = await sendToOpenAI(augmentedMessage, history);
-          aiResponseText = openAiResult.response;
-          aiResponseTitle = openAiResult.title;
-        } else {
-          throw err;
-        }
-      }
-    } else if (process.env.OPENAI_API_KEY) {
-      const openAiResult = await sendToOpenAI(augmentedMessage, history);
-      aiResponseText = openAiResult.response;
-      aiResponseTitle = openAiResult.title;
-    } else {
-      throw new Error(
-        'No AI API key or n8n webhook configured. Please set N8N_WEBHOOK_URL, GEMINI_API_KEY, or OPENAI_API_KEY in .env.local.'
-      );
     }
 
     // 9. Sanitize and persist assistant message
@@ -211,13 +238,17 @@ export async function POST(
       role: 'assistant',
       content: assistantContent,
       createdAt: new Date().toISOString(),
+      agentSteps,
+      agentMode,
     };
 
     try {
       assistantMessage = await createMessage(
         conversationId,
         'assistant',
-        assistantContent
+        assistantContent,
+        agentSteps,
+        agentMode
       );
     } catch (err) {
       console.warn('[/api/chat] Assistant message persist warning:', (err as Error).message);
@@ -241,6 +272,7 @@ export async function POST(
       success: true,
       conversationId,
       message: assistantMessage,
+      agentSteps,
       ...(generatedTitle && { title: generatedTitle }),
     };
 
