@@ -410,22 +410,86 @@ export function ChatContainer({
     [selectedModel, sendMessage]
   );
 
-  // Export conversation as Markdown
-  const handleExportMarkdown = useCallback(() => {
-    if (messages.length === 0) return;
-    let md = `# Conversation Export — NEXORA AI\n\n`;
-    messages.forEach((m) => {
-      const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 NEXORA (${m.modelUsed || 'AI'})`;
-      md += `${sender}\n\n${m.content}\n\n---\n\n`;
-    });
+  const [copiedHistory, setCopiedHistory] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nexora-chat-${Date.now()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // Export conversation in multiple formats
+  const handleExport = useCallback(
+    (format: 'md' | 'txt' | 'json') => {
+      if (messages.length === 0) return;
+      setShowExportMenu(false);
+
+      if (format === 'json') {
+        const jsonStr = JSON.stringify(
+          {
+            conversationId: currentConvIdRef.current,
+            exportedAt: new Date().toISOString(),
+            messages: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+              modelUsed: m.modelUsed,
+              personaUsed: m.personaUsed,
+              createdAt: m.createdAt,
+            })),
+          },
+          null,
+          2
+        );
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nexora-chat-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (format === 'txt') {
+        let txt = `NEXORA AI — Conversation Transcript\nDate: ${new Date().toLocaleString()}\n\n`;
+        messages.forEach((m) => {
+          const sender = m.role === 'user' ? 'YOU' : `NEXORA AI (${m.modelUsed || 'Assistant'})`;
+          txt += `[${sender}]\n${m.content}\n\n----------------------------------------\n\n`;
+        });
+        const blob = new Blob([txt], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nexora-chat-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Default: Markdown (.md)
+      let md = `# Conversation Export — NEXORA AI\n\n`;
+      md += `*Exported on ${new Date().toLocaleString()}*\n\n---\n\n`;
+      messages.forEach((m) => {
+        const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 NEXORA AI (${m.modelUsed || 'Assistant'})`;
+        md += `${sender}\n\n${m.content}\n\n---\n\n`;
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nexora-chat-${Date.now()}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [messages]
+  );
+
+  const handleCopyHistory = useCallback(() => {
+    if (messages.length === 0) return;
+    let fullText = `NEXORA AI Conversation\n\n`;
+    messages.forEach((m) => {
+      const sender = m.role === 'user' ? 'You' : `NEXORA (${m.modelUsed || 'AI'})`;
+      fullText += `${sender}:\n${m.content}\n\n`;
+    });
+    navigator.clipboard.writeText(fullText.trim());
+    setCopiedHistory(true);
+    setTimeout(() => setCopiedHistory(false), 2500);
   }, [messages]);
 
   return (
@@ -440,16 +504,80 @@ export function ChatContainer({
             <button
               type="button"
               className="utility-btn"
-              onClick={handleExportMarkdown}
-              title="Export conversation as Markdown"
+              onClick={handleCopyHistory}
+              title="Copy entire chat history to clipboard"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>Export</span>
+              {copiedHistory ? (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  <span>Copy History</span>
+                </>
+              )}
             </button>
+
+            <div className="export-dropdown-wrap">
+              <button
+                type="button"
+                className="utility-btn utility-btn-primary"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                title="Save & Download Chat History"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Save / Export</span>
+              </button>
+
+              {showExportMenu && (
+                <div className="export-menu-dropdown">
+                  <button
+                    type="button"
+                    className="export-menu-item"
+                    onClick={() => handleExport('md')}
+                  >
+                    <span className="export-item-icon">📄</span>
+                    <div className="export-item-text">
+                      <span className="export-item-title">Markdown (.md)</span>
+                      <span className="export-item-sub">Formatted headings & code</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="export-menu-item"
+                    onClick={() => handleExport('txt')}
+                  >
+                    <span className="export-item-icon">📝</span>
+                    <div className="export-item-text">
+                      <span className="export-item-title">Plain Text (.txt)</span>
+                      <span className="export-item-sub">Clean readable text transcript</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="export-menu-item"
+                    onClick={() => handleExport('json')}
+                  >
+                    <span className="export-item-icon">💻</span>
+                    <div className="export-item-text">
+                      <span className="export-item-title">JSON Data (.json)</span>
+                      <span className="export-item-sub">Structured message objects</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
