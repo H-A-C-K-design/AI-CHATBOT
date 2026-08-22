@@ -178,54 +178,39 @@ export async function POST(
       }
     }
 
-    // Fallback to n8n / Gemini / OpenAI if multi-agent was bypassed or errored
+    // Fallback to OpenAI / Gemini / n8n if multi-agent was bypassed or errored
     if (!aiResponseText) {
       const augmentedMessage = intelContext ? `${message}\n\n${intelContext}` : message;
-      if (process.env.N8N_WEBHOOK_URL) {
+      if (process.env.OPENAI_API_KEY) {
         try {
-          const n8nResult = await sendToN8n({
-            conversationId,
-            message: augmentedMessage,
-            history,
-          });
-          aiResponseText = n8nResult.response;
-          aiResponseTitle = n8nResult.title;
-        } catch (err: unknown) {
-          console.warn('[AI] n8n webhook error, falling back to direct LLM:', (err as Error).message);
+          const openAiResult = await sendToOpenAI(augmentedMessage, history);
+          aiResponseText = openAiResult.response;
+          aiResponseTitle = openAiResult.title;
+        } catch (openAiErr) {
+          console.warn('[AI] OpenAI error, trying Gemini:', (openAiErr as Error).message);
           if (process.env.GEMINI_API_KEY) {
             const geminiResult = await sendToGemini(augmentedMessage, history);
             aiResponseText = geminiResult.response;
             aiResponseTitle = geminiResult.title;
-          } else if (process.env.OPENAI_API_KEY) {
-            const openAiResult = await sendToOpenAI(augmentedMessage, history);
-            aiResponseText = openAiResult.response;
-            aiResponseTitle = openAiResult.title;
           } else {
-            throw err;
+            throw openAiErr;
           }
         }
       } else if (process.env.GEMINI_API_KEY) {
-        try {
-          const geminiResult = await sendToGemini(augmentedMessage, history);
-          aiResponseText = geminiResult.response;
-          aiResponseTitle = geminiResult.title;
-        } catch (err: unknown) {
-          if (process.env.OPENAI_API_KEY) {
-            console.warn('[AI] Gemini error, trying OpenAI:', (err as Error).message);
-            const openAiResult = await sendToOpenAI(augmentedMessage, history);
-            aiResponseText = openAiResult.response;
-            aiResponseTitle = openAiResult.title;
-          } else {
-            throw err;
-          }
-        }
-      } else if (process.env.OPENAI_API_KEY) {
-        const openAiResult = await sendToOpenAI(augmentedMessage, history);
-        aiResponseText = openAiResult.response;
-        aiResponseTitle = openAiResult.title;
+        const geminiResult = await sendToGemini(augmentedMessage, history);
+        aiResponseText = geminiResult.response;
+        aiResponseTitle = geminiResult.title;
+      } else if (process.env.N8N_WEBHOOK_URL) {
+        const n8nResult = await sendToN8n({
+          conversationId,
+          message: augmentedMessage,
+          history,
+        });
+        aiResponseText = n8nResult.response;
+        aiResponseTitle = n8nResult.title;
       } else {
         throw new Error(
-          'No AI API key or n8n webhook configured. Please set N8N_WEBHOOK_URL, GEMINI_API_KEY, or OPENAI_API_KEY in .env.local.'
+          'No AI API key or n8n webhook configured. Please set OPENAI_API_KEY or GEMINI_API_KEY in .env.local.'
         );
       }
     }

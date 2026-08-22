@@ -37,15 +37,14 @@ export async function sendToGemini(
   ];
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000);
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const requestedModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+    const requestedModel = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
     const fallbackModels = [
       requestedModel,
-      'gemini-3.6-flash',
-      'gemini-flash-latest',
-      'gemini-3.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
     ];
     // Deduplicate
     const modelsToTry = Array.from(new Set(fallbackModels));
@@ -68,7 +67,7 @@ export async function sendToGemini(
             contents,
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 4000,
+              maxOutputTokens: 2500,
             },
           }),
           signal: controller.signal,
@@ -82,6 +81,10 @@ export async function sendToGemini(
           const errorMsg =
             errorData?.error?.message || `Gemini API returned error ${response.status}`;
           lastError = new Error(errorMsg);
+          // If 404 or auth error, don't waste time trying invalid keys/endpoints
+          if (response.status === 400 || response.status === 401 || response.status === 403) {
+            break;
+          }
         }
       } catch (err) {
         lastError = err as Error;
