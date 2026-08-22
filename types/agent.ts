@@ -114,9 +114,34 @@ export type ToolName =
   | 'knowledge_retriever'
   | 'calculator_engine'
   | 'system_inspector'
-  | 'workflow_dispatcher';
+  | 'workflow_dispatcher'
+  | 'analyze_research_paper';
 
 export type ToolStatus = 'running' | 'success' | 'failed';
+
+export interface AgentToolDefinition {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  parameters: Array<{
+    name: string;
+    type: string;
+    description: string;
+    required: boolean;
+  }>;
+  execute: (args: Record<string, unknown>) => Promise<AgentToolResult>;
+}
+
+export interface AgentToolResult {
+  toolId: string;
+  toolName: string;
+  success: boolean;
+  executionTimeMs: number;
+  outputData: Record<string, unknown> | null;
+  errorMessage?: string;
+  summaryText: string;
+}
 
 export interface AgentToolCallRecord {
   id: string;

@@ -297,7 +297,7 @@ export async function runCompleteAgentBenchmark(): Promise<AgentBenchmarkReport>
     return 'Critical';
   };
 
-  const summaryMetrics = {
+  const summaryMetrics: AgentBenchmarkReport['summaryMetrics'] = {
     accuracy: {
       score: avgAccuracy,
       rating: getRating(avgAccuracy),
@@ -318,7 +318,7 @@ export async function runCompleteAgentBenchmark(): Promise<AgentBenchmarkReport>
     },
     hallucinationRate: {
       score: Math.max(0, 100 - avgHallucinationRate * 10),
-      rating: avgHallucinationRate < 3.0 ? 'Exceptional' : 'Moderate',
+      rating: (avgHallucinationRate < 3.0 ? 'Exceptional' : 'Moderate') as MetricScore['rating'],
       details: `${avgHallucinationRate}% measured hallucination rate (near zero unverified fabrication).`,
       benchmarkTarget: 5.0,
     },
@@ -330,19 +330,19 @@ export async function runCompleteAgentBenchmark(): Promise<AgentBenchmarkReport>
     },
     robustnessRecovery: {
       score: 96,
-      rating: 'Exceptional',
+      rating: 'Exceptional' as MetricScore['rating'],
       details: 'Seamless cognitive fallback on tool error and 100% rejection of prompt injections.',
       benchmarkTarget: 88,
     },
     uncertaintyAwareness: {
       score: 97,
-      rating: 'Exceptional',
+      rating: 'Exceptional' as MetricScore['rating'],
       details: 'Proactively flags ambiguities, refuses impossible constraints, and asks clarifying questions.',
       benchmarkTarget: 85,
     },
     resourceEfficiency: {
       score: 93,
-      rating: 'High',
+      rating: 'High' as MetricScore['rating'],
       details: `Mean execution time of ${avgLatency}ms with optimized token consumption per task.`,
       benchmarkTarget: 80,
     },

@@ -81,6 +81,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const requestedPersona = (body.persona || 'general-assistant') as AIPersonaId;
     const isStreamingRequested = body.stream !== false; // Default to real-time streaming
     const customApiKey = (body.customApiKey || request.headers.get('x-custom-api-key') || undefined) as string | undefined;
+    const attachments = (Array.isArray(body.attachments) ? body.attachments : []) as any[];
 
     // 4. Conversation Management (Fault-Tolerant)
     let conversationId: string =
@@ -153,7 +154,6 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
     }
 
-    const attachments = (Array.isArray(body.attachments) ? body.attachments : []) as any[];
     let attachmentContext = '';
     if (attachments.length > 0) {
       const fileSummaries = attachments.map((att: any) => {

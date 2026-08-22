@@ -11,12 +11,14 @@ interface NexoraLogoProps {
   size?: number;
   className?: string;
   glow?: boolean;
+  withBackground?: boolean;
 }
 
 export function NexoraLogo({
   size = 24,
   className = '',
   glow = false,
+  withBackground = false,
 }: NexoraLogoProps) {
   return (
     <div
