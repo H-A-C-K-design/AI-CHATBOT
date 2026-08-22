@@ -77,7 +77,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const message = sanitizeInput(rawMessage);
     const requestedConvId = body.conversationId as string | undefined;
-    const requestedModel = (body.model || 'gemini-3.6-flash') as AIModelId;
+    const requestedModel = (body.model || 'gemini-3.5-flash') as AIModelId;
     const requestedPersona = (body.persona || 'general-assistant') as AIPersonaId;
     const isStreamingRequested = body.stream !== false; // Default to real-time streaming
     const customApiKey = (body.customApiKey || request.headers.get('x-custom-api-key') || undefined) as string | undefined;

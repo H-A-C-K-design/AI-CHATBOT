@@ -34,6 +34,7 @@ export interface UpdateConversationInput {
 
 // --- Multi-AI Models & Providers ---
 export type AIModelId =
+  | 'gemini-3.5-flash'
   | 'gemini-3.6-flash'
   | 'gpt-4o'
   | 'gpt-4o-mini'

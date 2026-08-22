@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const router = useRouter();
 
   // Model Preferences State
-  const [defaultModel, setDefaultModel] = useState<AIModelId>('gemini-3.6-flash');
+  const [defaultModel, setDefaultModel] = useState<AIModelId>('gemini-3.5-flash');
   const [defaultPersona, setDefaultPersona] = useState<AIPersonaId>('general-assistant');
   const [temperature, setTemperature] = useState<number>(0.7);
 

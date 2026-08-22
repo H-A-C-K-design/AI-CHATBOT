@@ -5,11 +5,21 @@ import type { AIModelOption, AIPersonaOption, AIModelId, AIPersonaId } from '@/t
 
 export const AI_MODELS: AIModelOption[] = [
   {
+    id: 'gemini-3.5-flash',
+    name: 'Gemini 3.5 Flash',
+    provider: 'Google',
+    badge: 'Fast',
+    description: 'Ultra-fast, state-of-the-art multimodal reasoning model by Google with real-time response.',
+    contextWindow: '1M tokens',
+    iconType: 'gemini',
+    supportsReasoning: true,
+  },
+  {
     id: 'gemini-3.6-flash',
     name: 'Gemini 3.6 Flash',
     provider: 'Google',
     badge: 'Fast',
-    description: 'Ultra-fast, state-of-the-art multimodal reasoning model by Google with low latency.',
+    description: 'Advanced multimodal reasoning model by Google.',
     contextWindow: '1M tokens',
     iconType: 'gemini',
     supportsReasoning: true,

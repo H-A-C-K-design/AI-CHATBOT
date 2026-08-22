@@ -22,6 +22,15 @@ const DEFAULT_SYSTEM_INSTRUCTION = `You are NEXORA AI, an intelligent, professio
 - Use markdown formatting with language identifiers for all code blocks (e.g. \`\`\`python, \`\`\`typescript, \`\`\`sql).
 - Be concise, accurate, and direct. Explain key decisions briefly.`;
 
+const WORKING_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-3-flash-preview',
+  'gemini-3.6-flash',
+];
+
 /**
  * Format conversation history into Gemini API format
  */
@@ -49,7 +58,7 @@ function buildGeminiContents(
 
 /**
  * Real-time SSE Streaming Generator for Gemini
- * Streams text chunks directly as they arrive from Google Generative Language API
+ * Tries models in priority order for maximum reliability
  */
 export async function* streamFromGemini(
   userMessage: string,
@@ -61,85 +70,102 @@ export async function* streamFromGemini(
     throw new Error('GEMINI_API_KEY is not configured.');
   }
 
-  const model = options.model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+  const requestedModel = options.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const modelsToTry = Array.from(new Set([requestedModel, ...WORKING_MODELS]));
   const systemText = options.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION;
   const contents = buildGeminiContents(userMessage, history);
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  let streamConnected = false;
+  let lastError: Error | null = null;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemText }],
-      },
-      contents,
-      generationConfig: {
-        temperature: options.temperature ?? 0.7,
-        maxOutputTokens: options.maxTokens ?? 4000,
-      },
-    }),
-    signal: options.signal,
-  });
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMsg =
-      errorData?.error?.message || `Gemini API returned error HTTP ${response.status}`;
-    throw new Error(errorMsg);
-  }
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemText }],
+          },
+          contents,
+          generationConfig: {
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 4000,
+          },
+        }),
+        signal: options.signal,
+      });
 
-  if (!response.body) {
-    throw new Error('No response body received from Gemini stream.');
-  }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg =
+          errorData?.error?.message || `Gemini API error HTTP ${response.status}`;
+        lastError = new Error(errorMsg);
+        continue; // Try next available model in chain
+      }
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
+      if (!response.body) {
+        continue;
+      }
 
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data:')) continue;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        const dataStr = trimmed.replace(/^data:\s*/, '');
-        if (dataStr === '[DONE]') continue;
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data:')) continue;
 
-        try {
-          const parsed = JSON.parse(dataStr);
-          const candidate = parsed?.candidates?.[0];
-          const parts = candidate?.content?.parts || [];
+            const dataStr = trimmed.replace(/^data:\s*/, '');
+            if (dataStr === '[DONE]') continue;
 
-          for (const part of parts) {
-            if (part.thought && typeof part.text === 'string') {
-              yield { thinking: part.text };
-            } else if (typeof part.text === 'string') {
-              yield { text: part.text };
+            try {
+              const parsed = JSON.parse(dataStr);
+              const candidate = parsed?.candidates?.[0];
+              const parts = candidate?.content?.parts || [];
+
+              for (const part of parts) {
+                if (part.thought && typeof part.text === 'string') {
+                  yield { thinking: part.text };
+                } else if (typeof part.text === 'string') {
+                  yield { text: part.text };
+                }
+              }
+            } catch {
+              // Ignore partial chunk parsing
             }
           }
-        } catch {
-          // Ignore incomplete chunk JSON parses
         }
+        streamConnected = true;
+        break; // Stream completed successfully
+      } finally {
+        reader.releaseLock();
       }
+    } catch (err) {
+      lastError = err as Error;
     }
-  } finally {
-    reader.releaseLock();
+  }
+
+  if (!streamConnected && lastError) {
+    throw lastError;
   }
 }
 
 /**
- * Send message to Google Gemini API with fallback support (non-streaming)
+ * Send message to Google Gemini API with multi-model fallback chain (non-streaming)
  */
 export async function sendToGemini(
   userMessage: string,
@@ -155,74 +181,62 @@ export async function sendToGemini(
   const contents = buildGeminiContents(userMessage, history);
   const systemText = options.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20_000);
+  const requestedModel = options.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const modelsToTry = Array.from(new Set([requestedModel, ...WORKING_MODELS]));
 
-  try {
-    const requestedModel = options.model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-    const modelsToTry = Array.from(
-      new Set([requestedModel, 'gemini-3.6-flash', 'gemini-2.5-flash'])
-    );
+  let lastError: Error | null = null;
+  let data: any = null;
 
-    let lastError: Error | null = null;
-    let data: any = null;
-
-    for (const model of modelsToTry) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemText }],
           },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: systemText }],
-            },
-            contents,
-            generationConfig: {
-              temperature: options.temperature ?? 0.7,
-              maxOutputTokens: options.maxTokens ?? 3500,
-            },
-          }),
-          signal: options.signal || controller.signal,
-        });
+          contents,
+          generationConfig: {
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 3500,
+          },
+        }),
+        signal: options.signal,
+      });
 
-        if (response.ok) {
-          data = await response.json();
-          break;
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMsg =
-            errorData?.error?.message || `Gemini API returned error ${response.status}`;
-          lastError = new Error(errorMsg);
-          if (response.status === 400 || response.status === 401 || response.status === 403) {
-            break;
-          }
-        }
-      } catch (err) {
-        lastError = err as Error;
+      if (response.ok) {
+        data = await response.json();
+        break;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg =
+          errorData?.error?.message || `Gemini API returned error ${response.status}`;
+        lastError = new Error(errorMsg);
       }
+    } catch (err) {
+      lastError = err as Error;
     }
-
-    if (!data) {
-      throw lastError || new Error('Failed to generate response from Gemini.');
-    }
-
-    const candidate = data?.candidates?.[0];
-    const parts = candidate?.content?.parts || [];
-    const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);
-    const text = textPart?.text || parts[0]?.text;
-
-    if (!text) {
-      throw new Error('Received an empty response from Gemini.');
-    }
-
-    return {
-      response: text,
-      title: userMessage.substring(0, 80),
-    };
-  } finally {
-    clearTimeout(timeout);
   }
+
+  if (!data) {
+    throw lastError || new Error('Failed to generate response from Gemini.');
+  }
+
+  const candidate = data?.candidates?.[0];
+  const parts = candidate?.content?.parts || [];
+  const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);
+  const text = textPart?.text || parts[0]?.text;
+
+  if (!text) {
+    throw new Error('Received an empty response from Gemini.');
+  }
+
+  return {
+    response: text,
+    title: userMessage.substring(0, 80),
+  };
 }

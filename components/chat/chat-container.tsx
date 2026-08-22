@@ -27,7 +27,7 @@ export function ChatContainer({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModelId>('gemini-3.6-flash');
+  const [selectedModel, setSelectedModel] = useState<AIModelId>('gemini-3.5-flash');
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -54,7 +54,7 @@ export function ChatContainer({
       setError(null);
       setIsLoading(true);
 
-      const chosenModel = options.model || selectedModel || 'gemini-3.6-flash';
+      const chosenModel = options.model || selectedModel || 'gemini-3.5-flash';
       const chosenPersona = options.persona || 'general-assistant';
 
       // 1. Add Optimistic User Message

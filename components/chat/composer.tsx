@@ -26,7 +26,7 @@ export function Composer({
   isLoading,
   onStop,
   disabled,
-  selectedModel = 'gemini-3.6-flash',
+  selectedModel = 'gemini-3.5-flash',
   onModelChange,
 }: ComposerProps) {
   const [message, setMessage] = useState('');
