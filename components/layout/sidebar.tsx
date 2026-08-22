@@ -367,6 +367,17 @@ export function Sidebar({
           </Link>
 
           <Link
+            href="/agent/observability"
+            className={`chatgpt-nav-link ${pathname === '/agent/observability' ? 'chatgpt-nav-link-active' : ''}`}
+            onClick={onClose}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <span>Traces &amp; Telemetry</span>
+          </Link>
+
+          <Link
             href="/reports"
             className={`chatgpt-nav-link ${pathname.startsWith('/reports') ? 'chatgpt-nav-link-active' : ''}`}
             onClick={onClose}
