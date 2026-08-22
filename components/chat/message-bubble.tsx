@@ -5,7 +5,6 @@
 // ============================================================
 import React, { useState, useCallback } from 'react';
 import { MarkdownRenderer } from './markdown-renderer';
-import { AgentFlowVisualizer } from './agent-flow-visualizer';
 import type { Message } from '@/types';
 
 interface MessageBubbleProps {
@@ -48,21 +47,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
       {/* Content */}
       <div className="message-content-wrapper">
-        <div className="message-role-label flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span>{isUser ? 'You' : 'NEXORA AI'}</span>
-            {isAssistant && message.agentSteps && message.agentSteps.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/20">
-                <span>⚡</span> Multi-Agent Orchestrated
-              </span>
-            )}
-          </div>
+        <div className="message-role-label">
+          {isUser ? 'You' : 'NEXORA AI'}
         </div>
-
-        {/* Multi-Agent Execution Flow Card */}
-        {isAssistant && message.agentSteps && (
-          <AgentFlowVisualizer steps={message.agentSteps} />
-        )}
 
         <div className="message-content">
           {isUser ? (
