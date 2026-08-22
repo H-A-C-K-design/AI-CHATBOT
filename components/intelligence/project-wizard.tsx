@@ -7,11 +7,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useProjectSession } from '@/lib/context/project-context';
 import type { CreateProjectInput, MonitoringFrequency, AlertPriority } from '@/types';
 
 export function ProjectWizard() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { createAndActivateProject } = useProjectSession();
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,33 +126,9 @@ export function ProjectWizard() {
     setError(null);
 
     try {
-      const token = await getToken();
-      if (!token) throw new Error('You must be logged in.');
-
-      const response = await fetch('/api/intelligence/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to create project.');
-      }
-
-      // Automatically trigger initial autonomous collection for this project
-      const projectId = data.project?.id;
-      if (projectId) {
-        fetch(`/api/intelligence/projects/${projectId}/run`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-      }
-
-      router.push('/intelligence');
+      // Create project in Firestore database and save in project session
+      const newProj = await createAndActivateProject(formData);
+      router.push(`/intelligence?projectId=${newProj.id}`);
     } catch (err) {
       setError((err as Error).message);
     } finally {

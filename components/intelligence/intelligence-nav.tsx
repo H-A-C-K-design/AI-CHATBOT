@@ -4,10 +4,11 @@
 // Intelligence Top Bar & Sub-Navigation Header
 // Project Filter Selector + Live Monitoring Trigger Action
 // ============================================================
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useProjectSession } from '@/lib/context/project-context';
 import type { MonitoringProject } from '@/types';
 
 interface IntelligenceNavProps {
@@ -17,7 +18,7 @@ interface IntelligenceNavProps {
 }
 
 export function IntelligenceNav({
-  activeProjectId,
+  activeProjectId: propActiveProjectId,
   onSelectProject,
   onRefresh,
 }: IntelligenceNavProps) {
@@ -25,37 +26,15 @@ export function IntelligenceNav({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { getToken } = useAuth();
+  const { projects, activeProjectId: sessionActiveProjectId, setActiveProjectId } = useProjectSession();
 
-  const [projects, setProjects] = useState<MonitoringProject[]>([]);
-  const [selectedProj, setSelectedProj] = useState<string>(activeProjectId || searchParams.get('projectId') || '');
+  const currentProjectId = propActiveProjectId || searchParams.get('projectId') || sessionActiveProjectId || '';
   const [isRunningSync, setIsRunningSync] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
-  // Fetch user projects for the dropdown
-  const fetchProjects = useCallback(async () => {
-    try {
-      const token = await getToken();
-      if (!token) return;
-
-      const res = await fetch('/api/intelligence/projects', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setProjects(data.projects || []);
-      }
-    } catch {
-      // silent
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
-
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
-    setSelectedProj(val);
+    setActiveProjectId(val || null);
     if (onSelectProject) {
       onSelectProject(val);
     } else {
@@ -70,7 +49,7 @@ export function IntelligenceNav({
   };
 
   const handleRunSync = async () => {
-    const targetProject = selectedProj ? projects.find((p) => p.id === selectedProj) : projects[0];
+    const targetProject = currentProjectId ? projects.find((p) => p.id === currentProjectId) : projects[0];
     if (!targetProject) {
       router.push('/projects/new');
       return;
@@ -131,7 +110,7 @@ export function IntelligenceNav({
             </label>
             <select
               id="intel-project-select"
-              value={selectedProj}
+              value={currentProjectId}
               onChange={handleProjectChange}
               className="intel-select"
             >
@@ -181,7 +160,7 @@ export function IntelligenceNav({
       <nav className="intel-sub-tabs" aria-label="Intelligence subroutes">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
-          const hrefWithQuery = selectedProj ? `${link.href}?projectId=${selectedProj}` : link.href;
+          const hrefWithQuery = currentProjectId ? `${link.href}?projectId=${currentProjectId}` : link.href;
 
           return (
             <Link

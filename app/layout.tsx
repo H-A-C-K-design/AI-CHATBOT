@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
+import { ProjectProvider } from '@/lib/context/project-context';
 import { AntiInspect } from '@/components/security/anti-inspect';
 import './globals.css';
 
@@ -36,7 +37,9 @@ export default function RootLayout({
       <body>
         <AntiInspect />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ProjectProvider>{children}</ProjectProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

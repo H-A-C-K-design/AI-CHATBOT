@@ -8,12 +8,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useProjectSession } from '@/lib/context/project-context';
 import { EmptyState } from '@/components/intelligence/empty-state';
 import type { MonitoringProject } from '@/types';
 
 export default function ProjectsPage() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { createAndActivateProject, deleteProjectAndSync } = useProjectSession();
 
   const [projects, setProjects] = useState<MonitoringProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,13 +100,7 @@ export default function ProjectsPage() {
       return;
     }
     try {
-      const token = await getToken();
-      if (!token) return;
-
-      await fetch(`/api/intelligence/projects/${projectId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteProjectAndSync(projectId);
       fetchProjects();
     } catch {
       // silent
@@ -115,70 +111,47 @@ export default function ProjectsPage() {
     try {
       setLoading(true);
       setStatusMsg('Deploying Generative AI & Autonomous Systems monitoring project...');
-      const token = await getToken();
-      if (!token) throw new Error('You must be signed in.');
 
-      const createRes = await fetch('/api/intelligence/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const newProj = await createAndActivateProject({
+        name: 'Generative AI & Autonomous Agent Systems',
+        industry: 'Artificial Intelligence & Deep Learning',
+        description: 'Continuous surveillance of large language models, agentic frameworks, multi-agent swarms, and patented neural architectures.',
+        researchTopics: [
+          'Large Language Models',
+          'Autonomous Agents',
+          'Reasoning & Inference',
+          'Transformer Architecture',
+        ],
+        keywords: [
+          'agentic workflows',
+          'mixture of experts',
+          'deepseek r1',
+          'gemini flash',
+          'chain of thought',
+        ],
+        competitors: [
+          'OpenAI',
+          'Anthropic',
+          'Google DeepMind',
+          'Meta AI',
+        ],
+        patentKeywords: [
+          'neural network',
+          'attention mechanism',
+          'reinforcement learning',
+          'distributed inference',
+        ],
+        frequency: 'daily',
+        priorityThreshold: 0.75,
+        notificationPreferences: {
+          email: true,
+          inApp: true,
+          priorityThreshold: 'high',
         },
-        body: JSON.stringify({
-          name: 'Generative AI & Autonomous Agent Systems',
-          industry: 'Artificial Intelligence & Deep Learning',
-          description: 'Continuous surveillance of large language models, agentic frameworks, multi-agent swarms, and patented neural architectures.',
-          researchTopics: [
-            'Large Language Models',
-            'Autonomous Agents',
-            'Reasoning & Inference',
-            'Transformer Architecture',
-          ],
-          keywords: [
-            'agentic workflows',
-            'mixture of experts',
-            'deepseek r1',
-            'gemini flash',
-            'chain of thought',
-          ],
-          competitors: [
-            'OpenAI',
-            'Anthropic',
-            'Google DeepMind',
-            'Meta AI',
-          ],
-          patentKeywords: [
-            'neural network',
-            'attention mechanism',
-            'reinforcement learning',
-            'distributed inference',
-          ],
-          frequency: 'daily',
-          priorityThreshold: 0.75,
-          notificationPreferences: {
-            email: true,
-            inApp: true,
-            priorityThreshold: 'high',
-          },
-        }),
       });
 
-      const createData = await createRes.json();
-      if (!createData.success) {
-        throw new Error(createData.error || 'Failed to create starter project.');
-      }
-
-      const projectId = createData.project?.id;
-      if (projectId) {
-        setStatusMsg('Ingesting real publications from arXiv, USPTO & tech news...');
-        await fetch(`/api/intelligence/projects/${projectId}/run`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-
       await fetchProjects();
-      setStatusMsg('✓ Monitoring project initialized with live data!');
+      setStatusMsg(`✓ Project "${newProj.name}" active and saved in session!`);
       setTimeout(() => setStatusMsg(null), 4000);
     } catch (err) {
       setStatusMsg((err as Error).message);

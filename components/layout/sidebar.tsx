@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useProjectSession } from '@/lib/context/project-context';
 import { signOut } from '@/lib/firebase/auth';
 import type { Conversation } from '@/types';
 
@@ -35,6 +36,7 @@ export function Sidebar({
   onClose,
 }: SidebarProps) {
   const { user } = useAuth();
+  const { activeProject, activeProjectId } = useProjectSession();
   const router = useRouter();
   const pathname = usePathname() || '';
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,57 +211,65 @@ export function Sidebar({
 
             {intelExpanded && (
               <div className="nav-intel-submenu">
+                {activeProject && (
+                  <div className="sidebar-active-project-pill">
+                    <span className="project-dot-mini" />
+                    <span className="project-name-mini" title={activeProject.name}>
+                      {activeProject.name}
+                    </span>
+                  </div>
+                )}
                 <Link
-                  href="/intelligence"
+                  href={activeProjectId ? `/intelligence?projectId=${activeProjectId}` : '/intelligence'}
                   className={`sub-nav-item ${pathname === '/intelligence' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Overview
                 </Link>
                 <Link
-                  href="/intelligence/research"
+                  href={activeProjectId ? `/intelligence/research?projectId=${activeProjectId}` : '/intelligence/research'}
                   className={`sub-nav-item ${pathname === '/intelligence/research' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Research Trends
                 </Link>
                 <Link
-                  href="/intelligence/patents"
+                  href={activeProjectId ? `/intelligence/patents?projectId=${activeProjectId}` : '/intelligence/patents'}
                   className={`sub-nav-item ${pathname === '/intelligence/patents' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Patent Watch
                 </Link>
                 <Link
-                  href="/intelligence/competitors"
+                  href={activeProjectId ? `/intelligence/competitors?projectId=${activeProjectId}` : '/intelligence/competitors'}
                   className={`sub-nav-item ${pathname === '/intelligence/competitors' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Competitor Watch
                 </Link>
                 <Link
-                  href="/intelligence/news"
+                  href={activeProjectId ? `/intelligence/news?projectId=${activeProjectId}` : '/intelligence/news'}
                   className={`sub-nav-item ${pathname === '/intelligence/news' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Industry News
                 </Link>
                 <Link
-                  href="/intelligence/trends"
+                  href={activeProjectId ? `/intelligence/trends?projectId=${activeProjectId}` : '/intelligence/trends'}
                   className={`sub-nav-item ${pathname === '/intelligence/trends' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   Trend Engine
                 </Link>
                 <Link
-                  href="/intelligence/insights"
+                  href={activeProjectId ? `/intelligence/insights?projectId=${activeProjectId}` : '/intelligence/insights'}
                   className={`sub-nav-item ${pathname === '/intelligence/insights' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
                   AI Insights
                 </Link>
                 <Link
-                  href="/intelligence/alerts"
+                  href={activeProjectId ? `/intelligence/alerts?projectId=${activeProjectId}` : '/intelligence/alerts'}
                   className={`sub-nav-item ${pathname === '/intelligence/alerts' ? 'sub-nav-item-active' : ''}`}
                   onClick={onClose}
                 >
