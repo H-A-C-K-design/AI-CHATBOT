@@ -6845,6 +6845,176 @@ body {
   border-radius: 8px;
 }
 
+/* 🧠 Think Reasoning Button */
+.composer-think-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.composer-think-pill:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.think-pill-active {
+  background: rgba(16, 163, 127, 0.15) !important;
+  border-color: rgba(16, 163, 127, 0.45) !important;
+  color: var(--accent-primary) !important;
+  box-shadow: 0 0 10px rgba(16, 163, 127, 0.2);
+}
+
+.think-brain-icon {
+  transition: transform 0.2s ease;
+}
+
+.think-pill-active .think-brain-icon {
+  transform: scale(1.1);
+  color: var(--accent-primary);
+}
+
+/* 🎙️ Microphone Speech-to-Text Button */
+.composer-mic-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.composer-mic-btn:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+  transform: scale(1.05);
+}
+
+.mic-btn-active-recording {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+  animation: micPulseRecord 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes micPulseRecord {
+  0% {
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+    transform: scale(1.06);
+  }
+}
+
+.composer-box-listening {
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), var(--shadow-lg) !important;
+}
+
+/* Live Audio Soundwave Waveform */
+.mic-soundwave-anim {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+}
+
+.wave-bar {
+  width: 2px;
+  background: #ef4444;
+  border-radius: 1px;
+  animation: soundwaveBounce 0.8s ease-in-out infinite alternate;
+}
+
+.bar-1 { height: 6px; animation-delay: 0.1s; }
+.bar-2 { height: 12px; animation-delay: 0.3s; }
+.bar-3 { height: 8px; animation-delay: 0.2s; }
+.bar-4 { height: 10px; animation-delay: 0.4s; }
+
+@keyframes soundwaveBounce {
+  0% { height: 3px; opacity: 0.5; }
+  100% { height: 13px; opacity: 1; }
+}
+
+/* Voice Active & Error Banners */
+.composer-voice-active-banner {
+  max-width: 800px;
+  margin: 0 auto 8px;
+  width: 100%;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  animation: slideDownBanner 0.2s ease-out;
+}
+
+.voice-record-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse 1s infinite;
+}
+
+.voice-stop-btn {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.composer-voice-error-banner {
+  max-width: 800px;
+  margin: 0 auto 8px;
+  width: 100%;
+  pointer-events: auto;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 500;
+  animation: slideDownBanner 0.2s ease-out;
+}
+
+@keyframes slideDownBanner {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* Popover Dropdown Menus */
 .chatgpt-popover-menu {
   position: absolute;

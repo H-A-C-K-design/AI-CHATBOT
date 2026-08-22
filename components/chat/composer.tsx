@@ -53,6 +53,11 @@ export function Composer({
   const [enableIntelligenceRAG, setEnableIntelligenceRAG] = useState(false);
   const [enableReasoning, setEnableReasoning] = useState(false);
 
+  // Speech-to-Text Dictation State
+  const [isListening, setIsListening] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -257,6 +262,84 @@ export function Composer({
     }
   }, []);
 
+  // Speech-to-Text / Voice Dictation Handler
+  const toggleSpeechToText = useCallback(() => {
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // silent
+      }
+      setIsListening(false);
+      return;
+    }
+
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setSpeechError('Speech-to-text is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      setTimeout(() => setSpeechError(null), 4000);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setSpeechError(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          setMessage((prev) => {
+            const trimmed = prev.trim();
+            return trimmed ? `${trimmed} ${finalTranscript.trim()}` : finalTranscript.trim();
+          });
+        }
+
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition event:', event.error);
+        if (event.error === 'not-allowed') {
+          setSpeechError('Microphone permission denied. Please allow microphone access in your browser.');
+        } else if (event.error !== 'no-speech') {
+          setSpeechError(`Speech recognition: ${event.error}`);
+        }
+        setIsListening(false);
+        setTimeout(() => setSpeechError(null), 4000);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
+  }, [isListening]);
+
   const activeModelConfig = getModelById(model);
   const activePersonaConfig = getPersonaById(persona);
 
@@ -273,9 +356,26 @@ export function Composer({
         id="composer-hidden-file-input"
       />
 
+      {/* Voice Dictation Status / Error Banner */}
+      {isListening && (
+        <div className="composer-voice-active-banner">
+          <span className="voice-record-dot" />
+          <span>Listening... Speak into your microphone</span>
+          <button type="button" className="voice-stop-btn" onClick={toggleSpeechToText}>
+            Done
+          </button>
+        </div>
+      )}
+
+      {speechError && (
+        <div className="composer-voice-error-banner">
+          <span>⚠️ {speechError}</span>
+        </div>
+      )}
+
       {/* Main Composer Box */}
       <div
-        className={`chatgpt-composer-box ${isDragOver ? 'composer-box-dragover' : ''}`}
+        className={`chatgpt-composer-box ${isDragOver ? 'composer-box-dragover' : ''} ${isListening ? 'composer-box-listening' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -553,8 +653,50 @@ export function Composer({
             </div>
           </div>
 
-          {/* Right Controls: Model Selector & Send Button */}
+          {/* Right Controls: Think Toggle, Mic Dictation, Model Selector & Send Button */}
           <div className="chatgpt-composer-right">
+            {/* 🧠 Deep Think Reasoning Toggle */}
+            <button
+              type="button"
+              className={`composer-think-pill ${enableReasoning ? 'think-pill-active' : ''}`}
+              onClick={() => setEnableReasoning(!enableReasoning)}
+              title={enableReasoning ? 'Deep Thinking is ON (Cognitive CoT reasoning)' : 'Enable Deep Thinking (Think)'}
+              aria-pressed={enableReasoning}
+              id="btn-composer-think-toggle"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="think-brain-icon">
+                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z" />
+                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z" />
+              </svg>
+              <span>Think</span>
+            </button>
+
+            {/* 🎙️ Microphone Speech-to-Text Button */}
+            <button
+              type="button"
+              className={`composer-mic-btn ${isListening ? 'mic-btn-active-recording' : ''}`}
+              onClick={toggleSpeechToText}
+              title={isListening ? 'Listening to your voice... Click to stop' : 'Voice Dictation (Speech to Text)'}
+              aria-label="Voice dictation"
+              id="btn-composer-mic"
+            >
+              {isListening ? (
+                <div className="mic-soundwave-anim" aria-label="Listening">
+                  <span className="wave-bar bar-1" />
+                  <span className="wave-bar bar-2" />
+                  <span className="wave-bar bar-3" />
+                  <span className="wave-bar bar-4" />
+                </div>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              )}
+            </button>
+
             {/* Model Selector Dropdown */}
             <div className="chatgpt-dropdown-wrap" ref={modelDropdownRef}>
               <button
