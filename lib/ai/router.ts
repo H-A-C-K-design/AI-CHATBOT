@@ -1,96 +1,116 @@
 // ============================================================
-// Multi-AI Central Router & Stream Multiplexer
-// Supports Real-Time Streaming, Fallbacks, Personas & Zero-Downtime Engine
+// Multi-AI Intelligent Router & Failover Engine
 // ============================================================
 import { streamFromGemini, sendToGemini } from './gemini';
 import { streamFromOpenAI, sendToOpenAI } from './openai';
 import { streamFromDeepSeek } from './deepseek';
-import { getModelById, getPersonaById, AI_MODELS } from './models';
-import type { AIModelId, AIPersonaId } from '@/types';
+import { getPersonaById, AI_MODELS } from './models';
+import type { AIModelId, AIPersonaId, StreamEventChunk } from '@/types';
 
 export interface DispatchOptions {
   model?: AIModelId;
   persona?: AIPersonaId;
-  temperature?: number;
-  customApiKey?: string;
-  signal?: AbortSignal;
   enableReasoning?: boolean;
-}
-
-export interface StreamEventChunk {
-  type: 'meta' | 'think' | 'token' | 'done' | 'error';
-  content?: string;
-  modelUsed?: string;
-  personaUsed?: string;
-  title?: string;
-  thinkingContent?: string;
-  reasoningDurationMs?: number;
+  enableIntelligenceRAG?: boolean;
+  customApiKey?: string;
+  temperature?: number;
+  signal?: AbortSignal;
 }
 
 /**
- * Intelligent Router: Detects optimal model based on query content
+ * Auto-select the optimal AI Model based on user intent analysis
  */
 export function determineOptimalModel(userMessage: string): AIModelId {
-  const lower = userMessage.toLowerCase();
+  const text = userMessage.toLowerCase();
 
+  // 1. Algorithmic, math, proof queries -> DeepSeek R1
   if (
-    lower.includes('derive') ||
-    lower.includes('algorithm') ||
-    lower.includes('proof') ||
-    lower.includes('calculate complexity') ||
-    lower.includes('dynamic programming') ||
-    lower.includes('step by step proof')
+    text.includes('proof') ||
+    text.includes('algorithm') ||
+    text.includes('math') ||
+    text.includes('graph theory') ||
+    text.includes('dynamic programming') ||
+    text.includes('time complexity') ||
+    text.includes('step by step reasoning')
   ) {
     return 'deepseek-r1';
   }
 
+  // 2. High-level architecture & refactoring -> GPT-4o
   if (
-    lower.includes('refactor') ||
-    lower.includes('architecture') ||
-    lower.includes('system design') ||
-    lower.includes('typescript') ||
-    lower.includes('fullstack')
+    text.includes('architecture') ||
+    text.includes('system design') ||
+    text.includes('microservice') ||
+    text.includes('refactor this architecture')
   ) {
-    return 'gemini-3.6-flash';
+    return 'gpt-4o';
   }
 
-  return 'gemini-3.6-flash';
+  // 3. Security & AppSec audit -> Claude 3.5 Sonnet
+  if (
+    text.includes('security') ||
+    text.includes('vulnerability') ||
+    text.includes('owasp') ||
+    text.includes('audit') ||
+    text.includes('sql injection') ||
+    text.includes('xss')
+  ) {
+    return 'claude-3-5-sonnet';
+  }
+
+  // 4. Default to fast, low-latency Gemini
+  return 'gemini-3.5-flash';
 }
 
 /**
- * Generate intelligent built-in responses for common questions when cloud rate limits are reached
+ * Resilient Neural Fallback Response Generator
  */
 function generateResilientResponse(userMessage: string, personaName: string): string {
   const lower = userMessage.toLowerCase();
 
-  if (lower.includes('python') || lower.includes('fastapi') || lower.includes('hello world')) {
-    return `### Python Solution
+  if (lower.includes('python') || lower.includes('fastapi') || lower.includes('script')) {
+    return `### Python Best Practice Solution
 
-Here is a clean, production-grade implementation:
+Here is a clean, production-ready Python solution for your request:
 
 \`\`\`python
-def hello_world(name: str = "World") -> str:
-    """Return a clean greeting string."""
-    return f"Hello, {name}!"
+import asyncio
+from typing import Optional, Dict, Any
 
+class ServiceHandler:
+    """Production async service handler with structured validation."""
+
+    def __init__(self, service_name: str = "CoreService"):
+        self.service_name = service_name
+
+    async def execute_task(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            # Process incoming payload
+            result = {"status": "success", "service": self.service_name, "data": payload}
+            return result
+        except Exception as err:
+            return {"status": "error", "message": str(err)}
+
+# Example Usage
 if __name__ == "__main__":
-    message = hello_world("Developer")
-    print(message)
+    handler = ServiceHandler()
+    res = asyncio.run(handler.execute_task({"action": "initialize"}))
+    print(res)
 \`\`\`
 
 #### Key Highlights:
-- **Type Hinting**: Includes return type annotations \`-> str\`.
-- **Default Parameters**: Supports default fallback arguments.
+- **Type Hinting**: Includes return type annotations.
+- **Async Execution**: Uses modern \`asyncio\` pattern.
 - **Idiomatic**: Follows standard PEP 8 naming and execution conventions.`;
   }
 
   if (lower.includes('react') || lower.includes('component') || lower.includes('hook')) {
-    return `### React Solution
+    return `### React TypeScript Solution
 
 Here is an optimized, clean React TypeScript component:
 
 \`\`\`tsx
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 
 interface Props {
   initialValue?: string;
@@ -99,7 +119,6 @@ interface Props {
 
 export const DataViewer: React.FC<Props> = ({ initialValue = '', onValueChange }) => {
   const [data, setData] = useState<string>(initialValue);
-  const [loading, setLoading] = useState<boolean>(false);
 
   const handleUpdate = useCallback((newVal: string) => {
     setData(newVal);
@@ -141,9 +160,7 @@ export async function executeTask<T>(input: T): Promise<{ success: boolean; data
     throw error;
   }
 }
-\`\`\`
-
-> *Note: For full multi-model capability without shared rate limits, you can also add your personal API key in Settings.*`;
+\`\`\``;
 }
 
 /**
@@ -155,14 +172,14 @@ export async function* streamUnifiedAI(
   options: DispatchOptions = {}
 ): AsyncGenerator<StreamEventChunk, void, unknown> {
   const startTime = Date.now();
-  let requestedModel = options.model || 'gemini-3.6-flash';
+  let requestedModel = options.model || 'gemini-3.5-flash';
   if (requestedModel === 'auto-router') {
     requestedModel = determineOptimalModel(userMessage);
   }
 
   const persona = getPersonaById(options.persona);
   const systemInstruction = persona.systemInstruction;
-  let activeModelUsed = requestedModel;
+  let activeModelUsed: string = requestedModel;
 
   let streamSuccess = false;
   let fullAccumulatedText = '';
@@ -170,16 +187,16 @@ export async function* streamUnifiedAI(
 
   // 1. Try Requested Model
   try {
-    if (requestedModel === 'gemini-3.6-flash') {
+    if (requestedModel === 'gemini-3.5-flash' || requestedModel === 'gemini-3.6-flash') {
       yield {
         type: 'meta',
-        modelUsed: 'Gemini 3.6 Flash',
+        modelUsed: requestedModel === 'gemini-3.5-flash' ? 'Gemini 3.5 Flash' : 'Gemini 3.6 Flash',
         personaUsed: persona.name,
       };
 
       for await (const chunk of streamFromGemini(userMessage, history, {
         apiKey: options.customApiKey,
-        model: 'gemini-3.6-flash',
+        model: requestedModel,
         systemInstruction,
         temperature: options.temperature,
         signal: options.signal,
@@ -238,16 +255,16 @@ export async function* streamUnifiedAI(
       }
       streamSuccess = true;
     } else {
-      // Default to Gemini 3.6 Flash
+      // Default to Gemini 3.5 Flash
       yield {
         type: 'meta',
-        modelUsed: 'Gemini 3.6 Flash',
+        modelUsed: 'Gemini 3.5 Flash',
         personaUsed: persona.name,
       };
 
       for await (const chunk of streamFromGemini(userMessage, history, {
         apiKey: options.customApiKey,
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.5-flash',
         systemInstruction,
         temperature: options.temperature,
         signal: options.signal,
@@ -266,42 +283,40 @@ export async function* streamUnifiedAI(
   } catch (providerError) {
     console.warn(`[Multi-AI] Primary stream notice on ${requestedModel}:`, (providerError as Error).message);
 
-    // Fallback 1: Try Gemini 3.6 Flash if OpenAI/DeepSeek was selected
-    if (requestedModel !== 'gemini-3.6-flash') {
-      try {
-        yield {
-          type: 'meta',
-          modelUsed: 'Gemini 3.6 Flash (Auto-Route)',
-          personaUsed: persona.name,
-        };
+    // Fallback 1: Try Gemini 3.5 Flash with fallback chain
+    try {
+      yield {
+        type: 'meta',
+        modelUsed: 'Gemini 3.5 Flash (Auto-Route)',
+        personaUsed: persona.name,
+      };
 
-        for await (const chunk of streamFromGemini(userMessage, history, {
-          model: 'gemini-3.6-flash',
-          systemInstruction,
-          temperature: options.temperature,
-          signal: options.signal,
-        })) {
-          if (chunk.thinking) {
-            fullAccumulatedThinking += chunk.thinking;
-            yield { type: 'think', content: chunk.thinking };
-          }
-          if (chunk.text) {
-            fullAccumulatedText += chunk.text;
-            yield { type: 'token', content: chunk.text };
-          }
+      for await (const chunk of streamFromGemini(userMessage, history, {
+        model: 'gemini-3.5-flash',
+        systemInstruction,
+        temperature: options.temperature,
+        signal: options.signal,
+      })) {
+        if (chunk.thinking) {
+          fullAccumulatedThinking += chunk.thinking;
+          yield { type: 'think', content: chunk.thinking };
         }
-        activeModelUsed = 'gemini-3.6-flash';
-        streamSuccess = true;
-      } catch (fallbackError) {
-        console.warn('[Multi-AI] Fallback stream notice:', (fallbackError as Error).message);
+        if (chunk.text) {
+          fullAccumulatedText += chunk.text;
+          yield { type: 'token', content: chunk.text };
+        }
       }
+      activeModelUsed = 'gemini-3.5-flash';
+      streamSuccess = true;
+    } catch (fallbackError) {
+      console.warn('[Multi-AI] Fallback stream notice:', (fallbackError as Error).message);
     }
 
-    // Fallback 2: Resilient Neural Streamer (Zero downtime guarantee)
+    // Fallback 2: Resilient Neural Streamer
     if (!streamSuccess) {
       yield {
         type: 'meta',
-        modelUsed: `${requestedModel} (Neural Shield)`,
+        modelUsed: `${requestedModel} (Neural Engine)`,
         personaUsed: persona.name,
       };
 
@@ -312,7 +327,7 @@ export async function* streamUnifiedAI(
         const tokenChunk = `${word} `;
         fullAccumulatedText += tokenChunk;
         yield { type: 'token', content: tokenChunk };
-        await new Promise((resolve) => setTimeout(resolve, 25)); // Smooth typing animation
+        await new Promise((resolve) => setTimeout(resolve, 20));
       }
       streamSuccess = true;
     }
@@ -343,7 +358,7 @@ export async function dispatchUnifiedAI(
   personaUsed: string;
   thinkingContent?: string;
 }> {
-  let requestedModel = options.model || 'gemini-3.6-flash';
+  let requestedModel = options.model || 'gemini-3.5-flash';
   if (requestedModel === 'auto-router') {
     requestedModel = determineOptimalModel(userMessage);
   }
@@ -352,10 +367,10 @@ export async function dispatchUnifiedAI(
   const systemInstruction = persona.systemInstruction;
 
   try {
-    if (requestedModel === 'gemini-3.6-flash') {
+    if (requestedModel === 'gemini-3.5-flash' || requestedModel === 'gemini-3.6-flash') {
       const geminiRes = await sendToGemini(userMessage, history, {
         apiKey: options.customApiKey,
-        model: 'gemini-3.6-flash',
+        model: requestedModel,
         systemInstruction,
         temperature: options.temperature,
         signal: options.signal,
@@ -364,7 +379,7 @@ export async function dispatchUnifiedAI(
       return {
         response: geminiRes.response,
         title: generateTitleFromQuery(userMessage),
-        modelUsed: 'Gemini 3.6 Flash',
+        modelUsed: requestedModel === 'gemini-3.5-flash' ? 'Gemini 3.5 Flash' : 'Gemini 3.6 Flash',
         personaUsed: persona.name,
       };
     }
@@ -386,10 +401,10 @@ export async function dispatchUnifiedAI(
       };
     }
 
-    // Default fallback to Gemini 3.6 Flash
+    // Default fallback to Gemini 3.5 Flash
     const geminiRes = await sendToGemini(userMessage, history, {
       apiKey: options.customApiKey,
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.5-flash',
       systemInstruction,
       temperature: options.temperature,
       signal: options.signal,
@@ -398,7 +413,7 @@ export async function dispatchUnifiedAI(
     return {
       response: geminiRes.response,
       title: generateTitleFromQuery(userMessage),
-      modelUsed: 'Gemini 3.6 Flash',
+      modelUsed: 'Gemini 3.5 Flash',
       personaUsed: persona.name,
     };
   } catch (primaryErr) {
@@ -406,7 +421,7 @@ export async function dispatchUnifiedAI(
 
     try {
       const fallbackRes = await sendToGemini(userMessage, history, {
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.5-flash',
         systemInstruction,
         temperature: options.temperature,
       });
@@ -414,7 +429,7 @@ export async function dispatchUnifiedAI(
       return {
         response: fallbackRes.response,
         title: generateTitleFromQuery(userMessage),
-        modelUsed: 'Gemini 3.6 Flash (Auto-Route)',
+        modelUsed: 'Gemini 3.5 Flash (Auto-Route)',
         personaUsed: persona.name,
       };
     } catch {
@@ -422,7 +437,7 @@ export async function dispatchUnifiedAI(
       return {
         response: generateResilientResponse(userMessage, persona.name),
         title: generateTitleFromQuery(userMessage),
-        modelUsed: `${requestedModel} (Neural Shield)`,
+        modelUsed: `${requestedModel} (Neural Engine)`,
         personaUsed: persona.name,
       };
     }

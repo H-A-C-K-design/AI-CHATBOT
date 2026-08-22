@@ -143,6 +143,21 @@ export interface StreamEventDone {
   reasoningDurationMs?: number;
 }
 
+export interface StreamEventChunk {
+  type: StreamEventType;
+  content?: string;
+  thinkingContent?: string;
+  reasoningDurationMs?: number;
+  modelUsed?: string;
+  personaUsed?: string;
+  sources?: Array<{
+    title: string;
+    url: string;
+    sourceName: string;
+    type?: string;
+  }>;
+}
+
 // --- Multi-Agent Architecture ---
 export type AgentId =
   | 'lead-orchestrator'

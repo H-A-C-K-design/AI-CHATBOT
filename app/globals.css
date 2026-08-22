@@ -1640,23 +1640,39 @@ body {
   }
 }
 
-.message-actions {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
+.message-actions,
+.message-actions-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  margin-top: 10px !important;
+  width: 100% !important;
 }
 
 .message-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: none;
-  color: var(--text-tertiary);
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 12px !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 28px !important;
+  background: var(--bg-hover) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-secondary) !important;
   cursor: pointer;
   border-radius: var(--radius-sm);
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  transition: all var(--transition-fast);
+}
+
+.message-action-btn:hover {
+  background: var(--bg-active) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-secondary) !important;
 }
 
 .thinking-indicator {
