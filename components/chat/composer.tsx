@@ -385,7 +385,16 @@ export function Composer({
 
       {speechError && (
         <div className="composer-voice-error-banner">
-          <span>⚠️ {speechError}</span>
+          <div className="voice-error-content">
+            <span>⚠️ {speechError}</span>
+          </div>
+          <button
+            type="button"
+            className="voice-grant-btn"
+            onClick={toggleSpeechToText}
+          >
+            Enable Mic
+          </button>
         </div>
       )}
 
