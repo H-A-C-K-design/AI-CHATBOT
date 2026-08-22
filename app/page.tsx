@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { CodeBlock } from '@/components/chat/code-block';
@@ -66,18 +67,14 @@ LIMIT 20;`,
         <div className="landing-nav-inner">
           <Link href="/" className="landing-brand">
             <div className="landing-brand-icon">
-              <svg width="24" height="24" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                <rect width="48" height="48" rx="12" fill="url(#brand-grad)" />
-                <path d="M14 24C14 18.477 18.477 14 24 14C29.523 14 34 18.477 34 24" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                <path d="M18 28C18 24.686 20.686 22 24 22C27.314 22 30 24.686 30 28" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="24" cy="32" r="2.5" fill="white" />
-                <defs>
-                  <linearGradient id="brand-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#10a37f" />
-                    <stop offset="1" stopColor="#059669" />
-                  </linearGradient>
-                </defs>
-              </svg>
+              <Image
+                src="/logo.png"
+                alt="NEXORA AI Logo"
+                width={32}
+                height={32}
+                className="brand-logo-img"
+                priority
+              />
             </div>
             <span className="landing-brand-name">NEXORA AI</span>
           </Link>
@@ -359,7 +356,16 @@ async def authenticate_jwt(request: Request):
       <footer className="landing-footer">
         <div className="landing-footer-inner">
           <div className="footer-left">
-            <span className="footer-logo">NEXORA AI</span>
+            <div className="footer-brand-wrap">
+              <Image
+                src="/logo.png"
+                alt="NEXORA AI"
+                width={24}
+                height={24}
+                className="footer-logo-img"
+              />
+              <span className="footer-logo">NEXORA AI</span>
+            </div>
             <span className="footer-copy">© {new Date().getFullYear()} Nexora AI. All rights reserved.</span>
           </div>
           <div className="footer-links">

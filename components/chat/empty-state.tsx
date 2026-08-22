@@ -4,6 +4,7 @@
 // Empty State Component (ChatGPT / WebAI Aesthetic)
 // ============================================================
 import React from 'react';
+import Image from 'next/image';
 
 interface EmptyStateProps {
   onSuggestion?: (text: string) => void;
@@ -57,10 +58,13 @@ export function EmptyState({ onSuggestion }: EmptyStateProps) {
     <div className="empty-state">
       <div className="empty-state-header">
         <div className="empty-state-avatar">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-            <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <Image
+            src="/logo.png"
+            alt="NEXORA AI Logo"
+            width={48}
+            height={48}
+            className="empty-state-logo-img"
+          />
         </div>
         <h2 className="empty-state-title">What can I help with?</h2>
       </div>

@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
 import { signOut } from '@/lib/firebase/auth';
@@ -142,18 +143,13 @@ export function Sidebar({
         <div className="sidebar-brand-header">
           <Link href="/" className="sidebar-brand-link" onClick={onClose}>
             <div className="sidebar-brand-logo">
-              <svg width="20" height="20" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                <rect width="48" height="48" rx="12" fill="url(#sidebar-brand-grad)" />
-                <path d="M14 24C14 18.477 18.477 14 24 14C29.523 14 34 18.477 34 24" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                <path d="M18 28C18 24.686 20.686 22 24 22C27.314 22 30 24.686 30 28" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="24" cy="32" r="2.5" fill="white" />
-                <defs>
-                  <linearGradient id="sidebar-brand-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#10a37f" />
-                    <stop offset="1" stopColor="#059669" />
-                  </linearGradient>
-                </defs>
-              </svg>
+              <Image
+                src="/logo.png"
+                alt="NEXORA AI"
+                width={28}
+                height={28}
+                className="sidebar-logo-img"
+              />
             </div>
             <span className="sidebar-brand-title">NEXORA AI</span>
           </Link>

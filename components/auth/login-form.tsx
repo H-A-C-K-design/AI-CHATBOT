@@ -12,6 +12,7 @@ import {
   sendPasswordReset,
 } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export function LoginForm() {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
@@ -140,18 +141,14 @@ export function LoginForm() {
       {/* Logo & Branding */}
       <div className="login-header">
         <div className="login-logo">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="48" height="48" rx="12" fill="url(#logo-gradient)" />
-            <path d="M14 24C14 18.477 18.477 14 24 14C29.523 14 34 18.477 34 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M18 28C18 24.686 20.686 22 24 22C27.314 22 30 24.686 30 28" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="24" cy="32" r="2" fill="white" />
-            <defs>
-              <linearGradient id="logo-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#6366F1" />
-                <stop offset="1" stopColor="#8B5CF6" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <Image
+            src="/logo.png"
+            alt="NEXORA AI Logo"
+            width={64}
+            height={64}
+            className="login-logo-img"
+            priority
+          />
         </div>
         <h1 className="login-title">NEXORA AI</h1>
         <p className="login-subtitle">Your intelligent coding companion powered by AI</p>

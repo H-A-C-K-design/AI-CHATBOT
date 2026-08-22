@@ -5,8 +5,8 @@ import { LoginForm } from '@/components/auth/login-form';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign In — NexusAI',
-  description: 'Sign in to NexusAI, your intelligent coding companion powered by AI.',
+  title: 'Sign In — NEXORA AI',
+  description: 'Sign in to NEXORA AI, your intelligent coding companion powered by AI.',
 };
 
 export default function LoginPage() {

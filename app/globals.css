@@ -4649,3 +4649,77 @@ body {
 .intel-main-wrapper {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* ============================================================
+   NEXORA AI Logo Styles
+   ============================================================ */
+.brand-logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 16px rgba(0, 210, 170, 0.35);
+  border: 1px solid rgba(0, 210, 170, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-brand:hover .brand-logo-img {
+  transform: scale(1.06);
+  box-shadow: 0 0 22px rgba(0, 210, 170, 0.6);
+}
+
+.sidebar-logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 14px rgba(0, 210, 170, 0.3);
+  border: 1px solid rgba(0, 210, 170, 0.2);
+}
+
+.login-logo-img {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 30px rgba(0, 210, 170, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 210, 170, 0.3);
+  margin: 0 auto;
+}
+
+.empty-state-logo-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 24px rgba(0, 210, 170, 0.4);
+  border: 1px solid rgba(0, 210, 170, 0.25);
+}
+
+.message-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+}
+
+.footer-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-logo-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(0, 210, 170, 0.3);
+  border: 1px solid rgba(0, 210, 170, 0.2);
+}
+

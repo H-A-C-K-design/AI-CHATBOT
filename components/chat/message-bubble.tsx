@@ -4,6 +4,7 @@
 // Message Bubble Component
 // ============================================================
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { MarkdownRenderer } from './markdown-renderer';
 import type { Message } from '@/types';
 
@@ -36,19 +37,20 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             <path d="M4 20C4 16.686 7.582 14 12 14C16.418 14 20 16.686 20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="2" />
-            <circle cx="9" cy="10" r="1.5" fill="currentColor" />
-            <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-            <path d="M9 15C9.5 16.5 10.5 17 12 17C13.5 17 14.5 16.5 15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <Image
+            src="/logo.png"
+            alt="NEXORA AI"
+            width={24}
+            height={24}
+            className="message-avatar-img"
+          />
         )}
       </div>
 
       {/* Content */}
       <div className="message-content-wrapper">
         <div className="message-role-label">
-          {isUser ? 'You' : 'NexusAI'}
+          {isUser ? 'You' : 'NEXORA AI'}
         </div>
         <div className="message-content">
           {isUser ? (
