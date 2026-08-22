@@ -263,7 +263,7 @@ export function Composer({
   }, []);
 
   // Speech-to-Text / Voice Dictation Handler
-  const toggleSpeechToText = useCallback(() => {
+  const toggleSpeechToText = useCallback(async () => {
     if (isListening) {
       try {
         recognitionRef.current?.stop();
@@ -276,12 +276,28 @@ export function Composer({
 
     if (typeof window === 'undefined') return;
 
+    // Explicitly request microphone permission to trigger browser prompt
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Release stream so SpeechRecognition can bind cleanly
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (mediaErr: any) {
+        console.warn('getUserMedia audio error:', mediaErr);
+        if (mediaErr.name === 'NotAllowedError' || mediaErr.name === 'PermissionDeniedError') {
+          setSpeechError('Microphone permission blocked. Please click the 🔒 icon in your browser URL bar and allow Microphone.');
+          setTimeout(() => setSpeechError(null), 6000);
+          return;
+        }
+      }
+    }
+
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setSpeechError('Speech-to-text is not supported in this browser. Please use Chrome, Edge, or Safari.');
-      setTimeout(() => setSpeechError(null), 4000);
+      setSpeechError('Speech-to-text is not supported in this browser. Please use Google Chrome, Edge, or Safari.');
+      setTimeout(() => setSpeechError(null), 5000);
       return;
     }
 
@@ -321,12 +337,12 @@ export function Composer({
       recognition.onerror = (event: any) => {
         console.warn('Speech recognition event:', event.error);
         if (event.error === 'not-allowed') {
-          setSpeechError('Microphone permission denied. Please allow microphone access in your browser.');
+          setSpeechError('Microphone permission denied. Click the 🔒 lock icon near the website address bar to Allow Microphone.');
         } else if (event.error !== 'no-speech') {
           setSpeechError(`Speech recognition: ${event.error}`);
         }
         setIsListening(false);
-        setTimeout(() => setSpeechError(null), 4000);
+        setTimeout(() => setSpeechError(null), 6000);
       };
 
       recognition.onend = () => {
@@ -653,24 +669,8 @@ export function Composer({
             </div>
           </div>
 
-          {/* Right Controls: Think Toggle, Mic Dictation, Model Selector & Send Button */}
+          {/* Right Controls: Mic Dictation, Model Selector & Send Button */}
           <div className="chatgpt-composer-right">
-            {/* 🧠 Deep Think Reasoning Toggle */}
-            <button
-              type="button"
-              className={`composer-think-pill ${enableReasoning ? 'think-pill-active' : ''}`}
-              onClick={() => setEnableReasoning(!enableReasoning)}
-              title={enableReasoning ? 'Deep Thinking is ON (Cognitive CoT reasoning)' : 'Enable Deep Thinking (Think)'}
-              aria-pressed={enableReasoning}
-              id="btn-composer-think-toggle"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="think-brain-icon">
-                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z" />
-                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z" />
-              </svg>
-              <span>Think</span>
-            </button>
-
             {/* 🎙️ Microphone Speech-to-Text Button */}
             <button
               type="button"
