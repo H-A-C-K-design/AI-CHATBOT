@@ -90,7 +90,8 @@ export function MessageList({
           </div>
         )}
 
-        <div ref={bottomRef} />
+        {/* Generous bottom spacer so text is never covered or pressed against the composer */}
+        <div ref={bottomRef} className="message-list-bottom-spacer" />
       </div>
     </div>
   );
