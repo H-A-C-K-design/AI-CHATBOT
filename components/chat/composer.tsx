@@ -55,7 +55,6 @@ export function Composer({
 
   // Speech-to-Text Dictation State
   const [isListening, setIsListening] = useState(false);
-  const [speechError, setSpeechError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
   // Refs
@@ -276,30 +275,21 @@ export function Composer({
 
     if (typeof window === 'undefined') return;
 
-    // Explicitly request microphone permission to trigger browser prompt
+    // Explicitly request microphone permission from the user
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Release stream so SpeechRecognition can bind cleanly
         stream.getTracks().forEach((track) => track.stop());
-      } catch (mediaErr: any) {
-        console.warn('getUserMedia audio error:', mediaErr);
-        if (mediaErr.name === 'NotAllowedError' || mediaErr.name === 'PermissionDeniedError') {
-          setSpeechError('Microphone permission blocked. Please click the 🔒 icon in your browser URL bar and allow Microphone.');
-          setTimeout(() => setSpeechError(null), 6000);
-          return;
-        }
+      } catch {
+        setIsListening(false);
+        return;
       }
     }
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      setSpeechError('Speech-to-text is not supported in this browser. Please use Google Chrome, Edge, or Safari.');
-      setTimeout(() => setSpeechError(null), 5000);
-      return;
-    }
+    if (!SpeechRecognition) return;
 
     try {
       const recognition = new SpeechRecognition();
@@ -310,7 +300,6 @@ export function Composer({
 
       recognition.onstart = () => {
         setIsListening(true);
-        setSpeechError(null);
       };
 
       recognition.onresult = (event: any) => {
@@ -334,15 +323,8 @@ export function Composer({
         }
       };
 
-      recognition.onerror = (event: any) => {
-        console.warn('Speech recognition event:', event.error);
-        if (event.error === 'not-allowed') {
-          setSpeechError('Microphone permission denied. Click the 🔒 lock icon near the website address bar to Allow Microphone.');
-        } else if (event.error !== 'no-speech') {
-          setSpeechError(`Speech recognition: ${event.error}`);
-        }
+      recognition.onerror = () => {
         setIsListening(false);
-        setTimeout(() => setSpeechError(null), 6000);
       };
 
       recognition.onend = () => {
@@ -350,8 +332,7 @@ export function Composer({
       };
 
       recognition.start();
-    } catch (err) {
-      console.error('Failed to start speech recognition:', err);
+    } catch {
       setIsListening(false);
     }
   }, [isListening]);
@@ -371,32 +352,6 @@ export function Composer({
         style={{ display: 'none' }}
         id="composer-hidden-file-input"
       />
-
-      {/* Voice Dictation Status / Error Banner */}
-      {isListening && (
-        <div className="composer-voice-active-banner">
-          <span className="voice-record-dot" />
-          <span>Listening... Speak into your microphone</span>
-          <button type="button" className="voice-stop-btn" onClick={toggleSpeechToText}>
-            Done
-          </button>
-        </div>
-      )}
-
-      {speechError && (
-        <div className="composer-voice-error-banner">
-          <div className="voice-error-content">
-            <span>⚠️ {speechError}</span>
-          </div>
-          <button
-            type="button"
-            className="voice-grant-btn"
-            onClick={toggleSpeechToText}
-          >
-            Enable Mic
-          </button>
-        </div>
-      )}
 
       {/* Main Composer Box */}
       <div
