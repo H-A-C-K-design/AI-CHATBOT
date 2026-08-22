@@ -182,7 +182,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     (id: string, title: string) => {
       const newConv: Conversation = {
         id,
-        userId: user?.uid || '',
+        userId: user?.uid || 'anonymous',
         title,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -194,10 +194,12 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         }
         return updated;
       });
-      // Update URL to include conversation ID
-      router.replace(`/chat/${id}`);
+      // Soft-update URL to include conversation ID without unmounting ongoing streaming chat
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(null, '', `/chat/${id}`);
+      }
     },
-    [user, router]
+    [user]
   );
 
   // Refresh conversations after message sent
@@ -213,10 +215,6 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         <p>Loading...</p>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect
   }
 
   return (

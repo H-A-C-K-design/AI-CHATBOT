@@ -11,8 +11,13 @@ export async function GET(
   request: NextRequest
 ): Promise<NextResponse<ConversationsListResponse | ApiError>> {
   try {
-    const decodedToken = await authenticateRequest(request);
-    const userId = decodedToken.uid;
+    let userId = 'anonymous';
+    try {
+      const decodedToken = await authenticateRequest(request);
+      userId = decodedToken.uid;
+    } catch {
+      userId = 'anonymous';
+    }
 
     // Check for search query
     const searchQuery = request.nextUrl.searchParams.get('q');
@@ -26,13 +31,6 @@ export async function GET(
 
     return NextResponse.json({ success: true, conversations });
   } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: error.message } },
-        { status: 401 }
-      );
-    }
-
     console.error('[GET /api/conversations] Error:', (error as Error).message);
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to load conversations.' } },
@@ -45,8 +43,13 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ConversationCreateResponse | ApiError>> {
   try {
-    const decodedToken = await authenticateRequest(request);
-    const userId = decodedToken.uid;
+    let userId = 'anonymous';
+    try {
+      const decodedToken = await authenticateRequest(request);
+      userId = decodedToken.uid;
+    } catch {
+      userId = 'anonymous';
+    }
 
     let body: unknown = {};
     try {
@@ -62,13 +65,6 @@ export async function POST(
 
     return NextResponse.json({ success: true, conversation }, { status: 201 });
   } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: error.message } },
-        { status: 401 }
-      );
-    }
-
     console.error('[POST /api/conversations] Error:', (error as Error).message);
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to create conversation.' } },

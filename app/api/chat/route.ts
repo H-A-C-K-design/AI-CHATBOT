@@ -27,18 +27,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
-    // 1. Authenticate Request
+    // 1. Authenticate Request (Seamlessly supports Authenticated & Guest Users)
     let userId = 'anonymous';
     try {
       const decodedToken = await authenticateRequest(request);
       userId = decodedToken.uid;
-    } catch (authErr) {
-      if (authErr instanceof AuthError) {
-        return NextResponse.json(
-          { success: false, error: { code: 'UNAUTHORIZED', message: authErr.message } },
-          { status: 401 }
-        );
-      }
+    } catch {
+      userId = 'anonymous';
     }
 
     // 2. Rate Limit Check
