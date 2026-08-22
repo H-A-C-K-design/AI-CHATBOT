@@ -107,7 +107,7 @@ export function CompetitorCard({ competitor }: CompetitorCardProps) {
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
             <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <span>Insufficient verified data for {competitor.name}. Run monitoring or trigger ingestion.</span>
+          <span>Insufficient verified data for {competitor.name}. Awaiting ingestion cycle.</span>
         </div>
       )}
     </article>

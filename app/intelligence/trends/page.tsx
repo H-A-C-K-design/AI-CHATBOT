@@ -88,7 +88,7 @@ export default function ResearchTrendsPage() {
       ) : trends.length === 0 ? (
         <EmptyState
           title="No historical trend records found"
-          description="Trend curves and velocities require intelligence records to be stored. Click 'Run Monitoring' or create a monitoring project."
+          description="Trend curves and velocities require intelligence records. Create a monitoring project to begin tracking topics."
           actionText=""
         />
       ) : (

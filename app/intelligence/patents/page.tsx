@@ -112,7 +112,7 @@ export default function PatentWatchPage() {
           description={
             searchQuery || selectedAssignee
               ? 'No patent records match your filter. Try adjusting your query.'
-              : 'No patent items recorded yet. Click "Run Monitoring" to index patent keywords from USPTO.'
+              : 'No patent items recorded yet. Active monitoring projects will automatically index patent keywords.'
           }
           actionText=""
         />

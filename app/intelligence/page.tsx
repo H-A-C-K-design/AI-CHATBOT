@@ -206,7 +206,7 @@ export default function IntelligenceOverviewPage() {
             {!hasItems ? (
               <EmptyState
                 title="No intelligence items collected yet"
-                description="Click 'Run Monitoring' in the top bar to trigger autonomous collection from arXiv, OpenAlex, USPTO, and industry sources."
+                description="Create a monitoring project to start tracking publications from arXiv, OpenAlex, USPTO, and industry sources."
                 actionText=""
               />
             ) : (

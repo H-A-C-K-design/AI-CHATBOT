@@ -125,7 +125,7 @@ export default function ResearchMonitoringPage() {
           description={
             searchQuery || selectedTopic
               ? 'No publications match your filter criteria. Try adjusting your search query.'
-              : 'No research records collected yet. Click "Run Monitoring" to query arXiv and OpenAlex.'
+              : 'No research records collected yet. Active monitoring projects will automatically track arXiv and OpenAlex.'
           }
           actionText=""
         />

@@ -124,7 +124,7 @@ export default function IndustryNewsPage() {
           description={
             searchQuery || selectedTopic
               ? 'No news records match your filter criteria.'
-              : 'No industry news collected yet. Click "Run Monitoring" to collect live developments.'
+              : 'No industry news collected yet. Active monitoring projects will automatically track industry news.'
           }
           actionText=""
         />
