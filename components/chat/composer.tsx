@@ -4,7 +4,6 @@
 // Composer — Message Input Component
 // ============================================================
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { AgentSelector } from './agent-selector';
 import type { AgentMode } from '@/types';
 
 interface ComposerProps {
@@ -16,7 +15,7 @@ interface ComposerProps {
 
 export function Composer({ onSend, isLoading, onStop, disabled }: ComposerProps) {
   const [message, setMessage] = useState('');
-  const [agentMode, setAgentMode] = useState<AgentMode>('swarm');
+  const [agentMode] = useState<AgentMode>('swarm');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -55,11 +54,6 @@ export function Composer({ onSend, isLoading, onStop, disabled }: ComposerProps)
 
   return (
     <div className="composer-wrapper">
-      <AgentSelector
-        currentMode={agentMode}
-        onSelectMode={setAgentMode}
-        disabled={isLoading || disabled}
-      />
       <div className="composer">
         <textarea
           ref={textareaRef}
