@@ -19,9 +19,6 @@ export const chatRequestSchema = z.object({
     .string()
     .min(1, 'Message must not be empty')
     .max(MAX_MESSAGE_LENGTH, `Message must be at most ${MAX_MESSAGE_LENGTH} characters`),
-  agentMode: z
-    .enum(['swarm', 'lead-orchestrator', 'research-analyst', 'code-engineer', 'security-critic'])
-    .optional(),
 });
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;

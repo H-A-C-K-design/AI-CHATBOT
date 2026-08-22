@@ -67,15 +67,12 @@ export interface Message {
   role: MessageRole;
   content: string;
   createdAt: string; // ISO string
-  agentSteps?: AgentStep[];
-  agentMode?: AgentMode;
 }
 
 // --- Chat API ---
 export interface ChatRequest {
   conversationId?: string; // omit to create new conversation
   message: string;
-  agentMode?: AgentMode;
 }
 
 export interface ChatResponse {
@@ -83,7 +80,6 @@ export interface ChatResponse {
   conversationId: string;
   message: Message;
   title?: string; // included when a new title is auto-generated
-  agentSteps?: AgentStep[];
 }
 
 // --- n8n ---

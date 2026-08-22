@@ -13,9 +13,7 @@ const MESSAGES_SUBCOLLECTION = 'messages';
 export async function createMessage(
   conversationId: string,
   role: MessageRole,
-  content: string,
-  agentSteps?: import('@/types').AgentStep[],
-  agentMode?: import('@/types').AgentMode
+  content: string
 ): Promise<Message> {
   const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
@@ -25,8 +23,6 @@ export async function createMessage(
     role,
     content,
     createdAt: new Date().toISOString(),
-    ...(agentSteps && agentSteps.length > 0 && { agentSteps }),
-    ...(agentMode && { agentMode }),
   };
 
   try {
