@@ -49,6 +49,7 @@ export function ChatContainer({
         persona?: AIPersonaId;
         enableReasoning?: boolean;
         enableIntelligenceRAG?: boolean;
+        enableAgentMode?: boolean;
       } = {}
     ) => {
       setError(null);
@@ -56,6 +57,7 @@ export function ChatContainer({
 
       const chosenModel = options.model || selectedModel || 'gemini-3.5-flash';
       const chosenPersona = options.persona || 'general-assistant';
+      const isAgent = options.enableAgentMode ?? true;
 
       // 1. Add Optimistic User Message
       const userMsgId = `temp-user-${Date.now()}`;
@@ -75,8 +77,27 @@ export function ChatContainer({
         role: 'assistant',
         content: '',
         modelUsed: chosenModel,
-        personaUsed: chosenPersona,
+        personaUsed: isAgent ? 'Cognitive Agent Engine' : chosenPersona,
         createdAt: new Date().toISOString(),
+        agentExecutionState: isAgent
+          ? {
+              taskId: `task-${Date.now()}`,
+              currentStage: 'understand',
+              stageProgress: 10,
+              collaborationLogs: [],
+              toolCalls: [],
+              workingMemory: {
+                storedFacts: [],
+                artifacts: [],
+                stateVariables: {},
+                activeHypotheses: [],
+                compressedSummary: '',
+                tokenBudget: { maxTokens: 128000, usedTokens: 0, compressionRatio: '1:1' },
+              },
+              finalSolutionMarkdown: '',
+              totalExecutionTimeMs: 0,
+            }
+          : undefined,
       };
 
       setMessages((prev) => [...prev, tempUserMessage, tempAssistantMessage]);
@@ -99,7 +120,9 @@ export function ChatContainer({
           ? localStorage.getItem(`nexora_api_key_${chosenModel}`) || localStorage.getItem('nexora_api_key_custom') || undefined
           : undefined;
 
-        const response = await fetch('/api/chat', {
+        const endpoint = isAgent ? '/api/agent' : '/api/chat';
+
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -114,6 +137,7 @@ export function ChatContainer({
             stream: true,
             enableReasoning: options.enableReasoning,
             enableIntelligenceRAG: options.enableIntelligenceRAG,
+            enableAgentMode: isAgent,
             customApiKey,
           }),
           signal: abortControllerRef.current.signal,
@@ -168,6 +192,117 @@ export function ChatContainer({
                     )
                   );
                 }
+              } else if (event.type === 'stage_change') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        currentStage: event.stage,
+                        stageProgress: event.progress || m.agentExecutionState.stageProgress,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'understand_complete') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        understanding: event.data?.understanding,
+                        stageProgress: event.progress || 20,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'plan_created' || event.type === 'step_start' || event.type === 'step_complete') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        plan: event.data?.plan || m.agentExecutionState.plan,
+                        stageProgress: event.progress || m.agentExecutionState.stageProgress,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'collaborate_event') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    const existingLogs = m.agentExecutionState.collaborationLogs || [];
+                    const newLog = event.data?.collaboration;
+                    const updatedLogs = newLog ? [...existingLogs, newLog] : existingLogs;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        collaborationLogs: updatedLogs,
+                        stageProgress: event.progress || m.agentExecutionState.stageProgress,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'tool_start' || event.type === 'tool_complete') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    const existingTools = m.agentExecutionState.toolCalls || [];
+                    const newTool = event.data?.toolCall;
+                    const filtered = existingTools.filter((t) => t.id !== newTool?.id);
+                    const updatedTools = newTool ? [...filtered, newTool] : existingTools;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        toolCalls: updatedTools,
+                        stageProgress: event.progress || m.agentExecutionState.stageProgress,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'memory_updated') {
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id !== assistantMsgId || !m.agentExecutionState) return m;
+                    return {
+                      ...m,
+                      agentExecutionState: {
+                        ...m.agentExecutionState,
+                        workingMemory: event.data?.memory || m.agentExecutionState.workingMemory,
+                        stageProgress: event.progress || 90,
+                      },
+                    };
+                  })
+                );
+              } else if (event.type === 'final_token' || event.type === 'token') {
+                const tokenContent = event.data?.token || event.content || '';
+                fullContent += tokenContent;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId ? { ...m, content: fullContent } : m
+                  )
+                );
+              } else if (event.type === 'agent_done') {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId
+                      ? {
+                          ...m,
+                          content: event.data?.fullSolution || fullContent,
+                          agentExecutionState: event.data?.executionState || m.agentExecutionState,
+                        }
+                      : m
+                  )
+                );
               } else if (event.type === 'sources') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -179,13 +314,6 @@ export function ChatContainer({
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId ? { ...m, thinkingContent: fullThinking } : m
-                  )
-                );
-              } else if (event.type === 'token') {
-                fullContent += event.content || '';
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId ? { ...m, content: fullContent } : m
                   )
                 );
               } else if (event.type === 'done') {
@@ -202,8 +330,8 @@ export function ChatContainer({
                       : m
                   )
                 );
-              } else if (event.type === 'error') {
-                throw new Error(event.message || 'Stream error occurred.');
+              } else if (event.type === 'error' || event.type === 'agent_error') {
+                throw new Error(event.message || event.errorMessage || 'Stream error occurred.');
               }
             } catch {
               // Ignore single malformed line

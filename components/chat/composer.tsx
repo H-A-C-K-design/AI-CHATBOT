@@ -13,6 +13,7 @@ interface ComposerProps {
     persona: AIPersonaId;
     enableReasoning?: boolean;
     enableIntelligenceRAG?: boolean;
+    enableAgentMode?: boolean;
   }) => void;
   isLoading: boolean;
   onStop?: () => void;
@@ -35,6 +36,7 @@ export function Composer({
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [enableIntelligenceRAG, setEnableIntelligenceRAG] = useState(false);
   const [enableReasoning, setEnableReasoning] = useState(false);
+  const [enableAgentMode, setEnableAgentMode] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -87,13 +89,14 @@ export function Composer({
       persona,
       enableReasoning,
       enableIntelligenceRAG,
+      enableAgentMode,
     });
 
     setMessage('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-  }, [message, isLoading, disabled, model, persona, enableReasoning, enableIntelligenceRAG, onSend]);
+  }, [message, isLoading, disabled, model, persona, enableReasoning, enableIntelligenceRAG, enableAgentMode, onSend]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -214,6 +217,16 @@ export function Composer({
 
           {/* Feature Toggles */}
           <div className="composer-toggles">
+            <button
+              type="button"
+              className={`toggle-pill toggle-pill-agent ${enableAgentMode ? 'toggle-pill-agent-active' : ''}`}
+              onClick={() => setEnableAgentMode(!enableAgentMode)}
+              title="Autonomous Cognitive Lifecycle: Understand → Plan/Reason → Collaborate → Use Tools → Manage Context"
+            >
+              <span className="pill-sparkle">⚡</span>
+              <span>Agent Mode</span>
+            </button>
+
             <button
               type="button"
               className={`toggle-pill ${enableIntelligenceRAG ? 'toggle-pill-active' : ''}`}

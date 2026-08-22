@@ -6,6 +6,7 @@
 // ============================================================
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MarkdownRenderer } from './markdown-renderer';
+import { AgentTaskViewer } from '@/components/agent/agent-task-viewer';
 import type { Message, AIModelId } from '@/types';
 
 interface MessageBubbleProps {
@@ -126,6 +127,14 @@ export function MessageBubble({
             </div>
           )}
         </div>
+
+        {/* Autonomous 5-Stage Agent Task Viewer */}
+        {message.agentExecutionState && (
+          <AgentTaskViewer
+            executionState={message.agentExecutionState}
+            isExecuting={isStreaming && !message.content}
+          />
+        )}
 
         {/* Collapsible Thinking / Reasoning Block */}
         {message.thinkingContent && (

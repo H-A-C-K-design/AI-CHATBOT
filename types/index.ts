@@ -83,6 +83,7 @@ export interface Message {
   personaUsed?: string;
   thinkingContent?: string;
   reasoningDurationMs?: number;
+  agentExecutionState?: import('./agent').AgentExecutionState;
   sources?: Array<{
     title: string;
     url: string;
@@ -100,6 +101,7 @@ export interface ChatRequest {
   stream?: boolean;
   enableReasoning?: boolean;
   enableIntelligenceRAG?: boolean;
+  enableAgentMode?: boolean;
   customApiKey?: string; // Optional user-provided API key override
 }
 
@@ -254,5 +256,6 @@ export interface MessagesListResponse {
   messages: Message[];
 }
 
-// --- Re-export Intelligence Types ---
+// --- Re-export Intelligence & Agent Types ---
 export * from './intelligence';
+export * from './agent';
