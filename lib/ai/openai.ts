@@ -22,10 +22,10 @@ export interface StreamOpenAIOptions {
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are NEXORA AI, a world-class, professional AI coding assistant and intelligent workspace companion.
+- ALWAYS write 100% COMPLETE, working, unbroken, and production-ready code. NEVER truncate or cut off code, and NEVER write placeholders like '// ... rest of code' or '// TODO'.
 - Provide clean, production-grade code with error handling, type definitions, and best practices.
-- Use markdown formatting with language identifiers for all code blocks (e.g. \`\`\`python, \`\`\`typescript, \`\`\`sql).
-- Be concise, accurate, and direct. Avoid unnecessary conversational fluff.
-- When generating code, explain critical design decisions briefly after the code block.`;
+- Use markdown formatting with language identifiers for all code blocks (e.g. \`\`\`python, \`\`\`typescript, \`\`\`sql, \`\`\`tsx).
+- Be concise, accurate, and direct. Explain critical design decisions briefly after the complete code block.`;
 
 /**
  * Real-time SSE Streaming Generator for OpenAI
@@ -62,8 +62,8 @@ export async function* streamFromOpenAI(
     body: JSON.stringify({
       model,
       messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens ?? 3500,
+      temperature: options.temperature ?? 0.5,
+      max_tokens: options.maxTokens ?? 8192,
       stream: true,
     }),
     signal: options.signal,
@@ -154,8 +154,8 @@ export async function sendToOpenAI(
       body: JSON.stringify({
         model,
         messages,
-        temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 3500,
+        temperature: options.temperature ?? 0.5,
+        max_tokens: options.maxTokens ?? 8192,
       }),
       signal: options.signal || controller.signal,
     });

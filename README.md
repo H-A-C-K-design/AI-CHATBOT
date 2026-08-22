@@ -1,181 +1,100 @@
-# NexusAI — Intelligent Coding Companion
+# NEXORA AI — Intelligent Multi-Model Coding Companion
 
-A production-ready ChatGPT-style AI chatbot web application for developers, powered by **n8n** AI workflows and **Firebase Authentication**.
+A high-performance, real-time ChatGPT-style developer workspace powered by **100% Real Multi-AI Engines** (Google Gemini, OpenAI GPT-4o, DeepSeek-R1) and **Firebase Authentication**.
 
 ## Architecture
 
 ```
-User → Next.js Frontend → Authenticated API Routes → n8n Webhook → AI/LLM → Response
-              ↕                      ↕
-      Firebase Auth          Firestore Database
+User → Next.js 16 App Router → Authenticated SSE Streaming API (/api/chat) → Real Multi-AI Providers
+               ↕                                                                   ↕
+       Firebase Auth (OAuth)                                           [Google Gemini / OpenAI / DeepSeek]
+               ↕
+       Cloud Firestore Database
 ```
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| Frontend | Next.js 16 (App Router, Turbopack), React 19, TypeScript |
+| Styling | Pure Custom Vanilla CSS Design System with Glassmorphism & Dark Mode |
 | Authentication | Firebase Auth (Google + GitHub OAuth) |
-| Database | Cloud Firestore |
-| AI/Automation | n8n (webhook + AI workflow) |
+| Database | Cloud Firestore (Sessions, Messages, Tech Intelligence) |
+| AI Engines | Google Gemini (3.5 / 3.6 Flash), OpenAI (GPT-4o, GPT-4o-mini), DeepSeek-R1 |
+| Real-time Stream | Server-Sent Events (SSE) with Token-by-Token Streaming & Live Reasoning |
 | Deployment | Vercel |
 
 ## Features
 
 - 🔐 **Real authentication** — Google and GitHub OAuth via Firebase
-- 💬 **ChatGPT-style interface** — Sidebar, conversations, message composer
-- 🤖 **AI-powered responses** — Connected to n8n AI workflows (not mock)
-- 📝 **Markdown rendering** — Safe rendering with syntax highlighting
-- 📋 **Code blocks** — Syntax highlighting + one-click copy
-- 🔍 **Search conversations** — Find past conversations
-- ✏️ **Rename/delete conversations** — Full conversation management
-- 🌓 **Dark/light theme** — Professional design with theme toggle
-- 📱 **Responsive** — Desktop, tablet, and mobile layouts
-- 🔒 **Security-first** — Rate limiting, input validation, XSS protection
-- ⚡ **Real-time** — No fake data, no mock responses
+- 💬 **ChatGPT-style interface** — Sidebar, pinned chats, message composer, full markdown
+- 🤖 **100% Genuine Multi-AI** — Google Gemini, OpenAI GPT-4o, DeepSeek-R1 (Zero mock, zero fake responses)
+- 🧠 **Live Deep Thinking** — Real-time collapsible reasoning stream with timestamp metrics
+- 📝 **Markdown rendering** — Safe rendering with syntax highlighting and instant copy
+- 🔍 **Search conversations** — Fast client-side and database search for past sessions
+- ✏️ **Full Chat Management** — Rename, delete, pin, and export conversations (Markdown/JSON)
+- 🌓 **Dark/light theme** — Handcrafted high-contrast dark/light design system
+- 📱 **Fully Responsive** — Optimized for desktop, tablet, and mobile displays
+- 🔒 **Security-first** — Rate limiting, input sanitization, XSS protection, token verification
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- A Firebase project with Authentication enabled
-- A running n8n instance
-- An AI/LLM provider API key (configured in n8n)
+- A Firebase project with Authentication & Firestore enabled
+- An API Key from at least one supported AI Provider:
+  - Google Gemini API Key (`GEMINI_API_KEY`)
+  - OpenAI API Key (`OPENAI_API_KEY`)
+  - DeepSeek API Key (`DEEPSEEK_API_KEY`)
 
 ### 1. Clone and Install
 
 ```bash
-git clone <your-repo-url>
-cd ai-chatbot-hack
+git clone https://github.com/H-A-C-K-design/AI-CHATBOT.git
+cd "AI CHATBOT HACK"
 npm install
 ```
 
-### 2. Firebase Setup
+### 2. Environment Configuration
 
-1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Create a new project (or use existing)
-3. Enable **Authentication** → Sign-in method:
-   - Enable **Google** provider
-   - Enable **GitHub** provider (requires GitHub OAuth App — see below)
-4. Go to Project Settings → General → Your apps → Add web app
-5. Copy the Firebase config values
-6. Go to Project Settings → Service accounts → Generate new private key
-7. Add `localhost` to Authentication → Settings → Authorized domains
-
-### 3. GitHub OAuth App Setup
-
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Create a new OAuth App:
-   - **Homepage URL**: `http://localhost:3000`
-   - **Authorization callback URL**: Get from Firebase Console → Authentication → GitHub provider
-3. Copy the Client ID and Client Secret into Firebase's GitHub provider config
-
-### 4. n8n Workflow Setup
-
-See [`docs/n8n-workflow-setup.md`](docs/n8n-workflow-setup.md) for detailed instructions.
-
-### 5. Environment Variables
-
-Copy `.env.example` to `.env.local` and fill in your values:
-
-```bash
-cp .env.example .env.local
-```
-
-Required variables:
+Create a `.env.local` file with your credentials:
 
 ```env
-# Firebase Client (public)
-NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+# Firebase Client Configuration (public)
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
 
-# Firebase Admin (private — from service account JSON)
+# Firebase Admin Configuration (private)
 FIREBASE_ADMIN_PROJECT_ID=your-project-id
 FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_ADMIN_PRIVATE_KEY="your-private-key-string"
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# OpenAI API (private)
+# Real AI Provider API Keys (configure at least one)
+GEMINI_API_KEY=your-gemini-api-key
 OPENAI_API_KEY=your-openai-api-key
+DEEPSEEK_API_KEY=your-deepseek-api-key
 ```
 
-### 6. Run Development Server
+### 3. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 7. Firestore Indexes
+## Security & Architecture Principles
 
-Firestore will auto-create indexes for simple queries. If you see index errors, the error message will include a link to create the required index.
-
-## Deployment
-
-### Vercel
-
-1. Push to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add all environment variables from `.env.example` to Vercel settings
-4. Deploy
-
-### Post-Deployment
-
-1. Add your Vercel domain to Firebase → Authentication → Authorized domains
-2. Update GitHub OAuth App callback URL with production domain
-3. Update n8n webhook if needed
-4. Verify all environment variables are set in Vercel
-
-## Project Structure
-
-```
-app/
-  api/
-    chat/route.ts          # Main chat endpoint
-    conversations/          # CRUD endpoints
-  chat/
-    page.tsx               # New chat page
-    [id]/page.tsx          # Conversation page
-    layout.tsx             # Chat layout with sidebar
-  login/page.tsx           # Login page
-  settings/page.tsx        # Settings page
-  layout.tsx               # Root layout
-  page.tsx                 # Root redirect
-
-components/
-  auth/                    # Auth provider, login form
-  chat/                    # Chat UI components
-  layout/                  # Sidebar
-  ui/                      # Theme toggle
-
-lib/
-  firebase/                # Firebase client + admin SDKs
-  auth/                    # Session verification
-  database/                # Firestore CRUD operations
-  n8n/                     # n8n webhook client
-  security/                # Rate limiter
-  validation/              # Zod schemas, sanitization
-
-types/                     # TypeScript type definitions
-middleware.ts              # Route protection + security headers
-```
-
-## Security
-
-- ✅ Firebase ID token verification on every API request
-- ✅ Server-side conversation ownership checks
-- ✅ Input validation with Zod
-- ✅ Rate limiting (per-user sliding window)
-- ✅ Safe Markdown rendering (rehype-sanitize)
-- ✅ XSS protection (no raw HTML from AI)
-- ✅ Security headers (X-Frame-Options, CSP, etc.)
-- ✅ No secrets in client-side code
-- ✅ No internal error details exposed to users
+- ✅ Real-time ID token verification on every API route
+- ✅ Zero mock / fake fallback policy — authentic provider execution
+- ✅ Strict sliding-window rate limiting per authenticated UID
+- ✅ Safe Markdown sanitization against XSS
+- ✅ High token budget (8,192 tokens) for complete, unbroken code answers
 
 ## License
 

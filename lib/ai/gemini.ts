@@ -17,10 +17,15 @@ export interface StreamGeminiOptions {
   signal?: AbortSignal;
 }
 
-const DEFAULT_SYSTEM_INSTRUCTION = `You are NEXORA AI, an intelligent, professional AI coding assistant and developer workspace companion.
-- Provide clean, production-grade code with error handling, type definitions, and best practices.
-- Use markdown formatting with language identifiers for all code blocks (e.g. \`\`\`python, \`\`\`typescript, \`\`\`sql).
-- Be concise, accurate, and direct. Explain key decisions briefly.`;
+const DEFAULT_SYSTEM_INSTRUCTION = `You are NEXORA AI, a world-class, Principal AI Software Engineer and Intelligent Workspace Companion.
+- ALWAYS write 100% COMPLETE, fully functional, unbroken, and production-ready code. NEVER cut off code in the middle, never omit implementations, and NEVER use lazy placeholders like '// ... rest of code' or '// TODO implement here'.
+- If providing a script, component, or module, provide the entire working code with imports, types, proper error handling, and export statements.
+- Format all code with proper markdown language identifiers (e.g. \`\`\`typescript, \`\`\`python, \`\`\`tsx, \`\`\`html, \`\`\`css, \`\`\`json, \`\`\`bash).
+- Structure your response professionally:
+  1. Direct, authoritative explanation of the architecture or logic.
+  2. Full, complete, syntax-highlighted code block(s).
+  3. Brief breakdown of key technical decisions, security considerations, and step-by-step usage/testing instructions.
+- Be accurate, concise, and developer-centric.`;
 
 const WORKING_MODELS = [
   'gemini-3.5-flash',
@@ -93,8 +98,8 @@ export async function* streamFromGemini(
           },
           contents,
           generationConfig: {
-            temperature: options.temperature ?? 0.7,
-            maxOutputTokens: options.maxTokens ?? 4000,
+            temperature: options.temperature ?? 0.5,
+            maxOutputTokens: options.maxTokens ?? 8192,
           },
         }),
         signal: options.signal,
@@ -201,8 +206,8 @@ export async function sendToGemini(
           },
           contents,
           generationConfig: {
-            temperature: options.temperature ?? 0.7,
-            maxOutputTokens: options.maxTokens ?? 3500,
+            temperature: options.temperature ?? 0.5,
+            maxOutputTokens: options.maxTokens ?? 8192,
           },
         }),
         signal: options.signal,

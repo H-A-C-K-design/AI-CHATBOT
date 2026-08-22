@@ -24,7 +24,6 @@ export default function SettingsPage() {
   const [geminiKey, setGeminiKey] = useState('');
   const [openAiKey, setOpenAiKey] = useState('');
   const [deepseekKey, setDeepseekKey] = useState('');
-  const [claudeKey, setClaudeKey] = useState('');
   const [showKeys, setShowKeys] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -49,7 +48,6 @@ export default function SettingsPage() {
       setGeminiKey(localStorage.getItem('nexora_api_key_gemini-3.6-flash') || '');
       setOpenAiKey(localStorage.getItem('nexora_api_key_gpt-4o') || '');
       setDeepseekKey(localStorage.getItem('nexora_api_key_deepseek-r1') || '');
-      setClaudeKey(localStorage.getItem('nexora_api_key_claude-3-5-sonnet') || '');
     }
   }, []);
 
@@ -68,9 +66,6 @@ export default function SettingsPage() {
 
     if (deepseekKey.trim()) localStorage.setItem('nexora_api_key_deepseek-r1', deepseekKey.trim());
     else localStorage.removeItem('nexora_api_key_deepseek-r1');
-
-    if (claudeKey.trim()) localStorage.setItem('nexora_api_key_claude-3-5-sonnet', claudeKey.trim());
-    else localStorage.removeItem('nexora_api_key_claude-3-5-sonnet');
 
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
@@ -235,17 +230,6 @@ export default function SettingsPage() {
                 placeholder="sk-..."
                 value={deepseekKey}
                 onChange={(e) => setDeepseekKey(e.target.value)}
-                className="settings-input"
-              />
-            </div>
-
-            <div className="settings-field">
-              <label className="settings-field-label">Anthropic Claude API Key</label>
-              <input
-                type={showKeys ? 'text' : 'password'}
-                placeholder="sk-ant-..."
-                value={claudeKey}
-                onChange={(e) => setClaudeKey(e.target.value)}
                 className="settings-input"
               />
             </div>

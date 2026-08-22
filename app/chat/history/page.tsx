@@ -469,7 +469,7 @@ export default function ChatHistoryPage() {
                   <option value="gemini-3.6-flash">Gemini 3.6 Flash (Thinking)</option>
                   <option value="gpt-4o">GPT-4o (Omni Intelligence)</option>
                   <option value="deepseek-r1">DeepSeek R1 (Deep Reasoning)</option>
-                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (Coding &amp; Analysis)</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini (Speed &amp; Efficiency)</option>
                 </select>
               </div>
 

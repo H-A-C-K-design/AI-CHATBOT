@@ -48,7 +48,6 @@ export type AIModelId =
   | 'gpt-4o'
   | 'gpt-4o-mini'
   | 'deepseek-r1'
-  | 'claude-3-5-sonnet'
   | 'auto-router';
 
 export type AIPersonaId =

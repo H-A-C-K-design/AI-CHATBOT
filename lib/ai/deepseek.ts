@@ -12,6 +12,7 @@ export interface StreamDeepSeekOptions {
 }
 
 const DEFAULT_DEEPSEEK_SYSTEM = `You are DeepSeek-R1, an elite mathematical, algorithmic, and architectural reasoning assistant.
+- ALWAYS write 100% COMPLETE, working, unbroken, and production-ready code. NEVER truncate or omit code, and NEVER write placeholders like '// ... rest of code'.
 - Provide meticulous step-by-step reasoning when solving complex technical problems.
 - Format all code with strict syntax highlighting, type safety, and error handling.
 - Be exhaustive, precise, and direct.`;
@@ -46,8 +47,8 @@ export async function* streamFromDeepSeek(
     body: JSON.stringify({
       model: options.model || 'deepseek-reasoner',
       messages,
-      temperature: options.temperature ?? 0.6,
-      max_tokens: options.maxTokens ?? 4000,
+      temperature: options.temperature ?? 0.5,
+      max_tokens: options.maxTokens ?? 8192,
       stream: true,
     }),
     signal: options.signal,
@@ -100,5 +101,71 @@ export async function* streamFromDeepSeek(
     }
   } finally {
     reader.releaseLock();
+  }
+}
+
+/**
+ * Send message to DeepSeek API (non-streaming)
+ */
+export async function sendToDeepSeek(
+  userMessage: string,
+  history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [],
+  options: StreamDeepSeekOptions = {}
+): Promise<{ response: string; title: string; thinkingContent?: string }> {
+  const apiKey = options.apiKey || process.env.DEEPSEEK_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('DEEPSEEK_API_KEY is not configured.');
+  }
+
+  const systemText = options.systemInstruction || DEFAULT_DEEPSEEK_SYSTEM;
+  const messages = [
+    { role: 'system', content: systemText },
+    ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+    { role: 'user', content: userMessage },
+  ];
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60_000);
+
+  try {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: options.model || 'deepseek-reasoner',
+        messages,
+        temperature: options.temperature ?? 0.5,
+        max_tokens: options.maxTokens ?? 8192,
+      }),
+      signal: options.signal || controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMsg =
+        errorData?.error?.message || `DeepSeek API error HTTP ${response.status}`;
+      throw new Error(errorMsg);
+    }
+
+    const data = await response.json();
+    const choice = data?.choices?.[0]?.message;
+    const content = choice?.content;
+    const reasoning = choice?.reasoning_content;
+
+    if (!content) {
+      throw new Error('Received an empty response from DeepSeek.');
+    }
+
+    return {
+      response: content,
+      title: userMessage.substring(0, 80),
+      thinkingContent: reasoning || undefined,
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 }
