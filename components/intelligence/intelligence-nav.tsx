@@ -74,9 +74,12 @@ export function IntelligenceNav({
     setIsRunning(true);
     setRunMessage('Collecting real sources & analyzing with AI...');
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
     try {
       const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
+      if (!token) throw new Error('Not authenticated. Please sign in.');
 
       let targetId = selectedProj;
       if (!targetId && projects.length > 0) {
@@ -84,6 +87,7 @@ export function IntelligenceNav({
       }
 
       if (!targetId) {
+        setRunMessage('No active project found. Create a monitoring project first.');
         router.push('/projects/new');
         return;
       }
@@ -91,6 +95,7 @@ export function IntelligenceNav({
       const res = await fetch(`/api/intelligence/projects/${targetId}/run`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -103,9 +108,14 @@ export function IntelligenceNav({
         setTimeout(() => setRunMessage(null), 4000);
       }
     } catch (err) {
-      setRunMessage(`Error: ${(err as Error).message}`);
+      if ((err as Error).name === 'AbortError') {
+        setRunMessage('Monitoring request timed out. Please try again.');
+      } else {
+        setRunMessage(`Status: ${(err as Error).message}`);
+      }
       setTimeout(() => setRunMessage(null), 4000);
     } finally {
+      clearTimeout(timeout);
       setIsRunning(false);
     }
   };

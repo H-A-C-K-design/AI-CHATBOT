@@ -93,42 +93,68 @@ Respond ONLY with a valid JSON object matching this schema:
     let jsonStr = '';
 
     if (process.env.GEMINI_API_KEY) {
-      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: 'application/json',
-            },
-          }),
+      const modelsToTry = [
+        process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+        'gemini-3.6-flash',
+        'gemini-flash-latest',
+        'gemini-3.5-flash',
+      ];
+      const uniqueModels = Array.from(new Set(modelsToTry));
+
+      for (const model of uniqueModels) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 8000);
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: {
+                  temperature: 0.2,
+                  responseMimeType: 'application/json',
+                },
+              }),
+              signal: controller.signal,
+            }
+          );
+          clearTimeout(timer);
+          if (res.ok) {
+            const data = await res.json();
+            jsonStr = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (jsonStr) break;
+          }
+        } catch {
+          // try next model
         }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        jsonStr = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       }
     } else if (process.env.OPENAI_API_KEY) {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.2,
-          response_format: { type: 'json_object' },
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        jsonStr = data?.choices?.[0]?.message?.content || '';
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          jsonStr = data?.choices?.[0]?.message?.content || '';
+        }
+      } catch {
+        clearTimeout(timer);
       }
     }
 
@@ -258,41 +284,67 @@ Respond ONLY with a valid JSON array:
   try {
     let jsonStr = '';
     if (process.env.GEMINI_API_KEY) {
-      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
-          }),
+      const modelsToTry = [
+        process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+        'gemini-3.6-flash',
+        'gemini-flash-latest',
+        'gemini-3.5-flash',
+      ];
+      const uniqueModels = Array.from(new Set(modelsToTry));
+
+      for (const model of uniqueModels) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 10000);
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
+              }),
+              signal: controller.signal,
+            }
+          );
+          clearTimeout(timer);
+          if (res.ok) {
+            const data = await res.json();
+            jsonStr = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (jsonStr) break;
+          }
+        } catch {
+          // try next model
         }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        jsonStr = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       }
     } else if (process.env.OPENAI_API_KEY) {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.3,
-          response_format: { type: 'json_object' },
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const raw = data?.choices?.[0]?.message?.content || '';
-        const parsed = JSON.parse(raw);
-        jsonStr = Array.isArray(parsed) ? raw : JSON.stringify(parsed.insights || [parsed]);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            response_format: { type: 'json_object' },
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          const raw = data?.choices?.[0]?.message?.content || '';
+          const parsed = JSON.parse(raw);
+          jsonStr = Array.isArray(parsed) ? raw : JSON.stringify(parsed.insights || [parsed]);
+        }
+      } catch {
+        clearTimeout(timer);
       }
     }
 

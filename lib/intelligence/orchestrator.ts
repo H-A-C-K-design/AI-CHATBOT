@@ -86,222 +86,230 @@ export async function runProjectMonitoring(
     patentRecords.length +
     newsRecords.length;
 
-  // 3. Process & Store arXiv Research Records
-  for (const raw of arxivRecords) {
-    try {
-      const analysis = await analyzeIntelligenceItem(
-        {
+  // 3. Process & Store arXiv Research Records in parallel
+  await Promise.all(
+    arxivRecords.map(async (raw) => {
+      try {
+        const analysis = await analyzeIntelligenceItem(
+          {
+            type: 'research',
+            title: raw.title,
+            description: raw.description,
+            sourceName: raw.sourceName,
+            sourceUrl: raw.sourceUrl,
+            author: raw.author,
+            organization: raw.organization,
+            keywords: raw.keywords,
+          },
+          projectContext
+        );
+
+        const saved = await saveIntelligenceItem({
+          projectId: project.id,
+          userId: project.userId,
           type: 'research',
           title: raw.title,
           description: raw.description,
           sourceName: raw.sourceName,
           sourceUrl: raw.sourceUrl,
+          publishedAt: raw.publishedAt,
+          retrievedAt: new Date().toISOString(),
           author: raw.author,
           organization: raw.organization,
           keywords: raw.keywords,
-        },
-        projectContext
-      );
+          topics: raw.topics,
+          relevanceScore: analysis.relevanceScore,
+          impactScore: analysis.impactScore,
+          confidenceScore: analysis.confidenceScore,
+          summary: analysis.summary,
+          whyItMatters: analysis.whyItMatters,
+          status: 'verified',
+          metadata: {
+            arxivId: raw.arxivId,
+            doi: raw.doi,
+          },
+          fingerprint: raw.fingerprint,
+        });
 
-      const saved = await saveIntelligenceItem({
-        projectId: project.id,
-        userId: project.userId,
-        type: 'research',
-        title: raw.title,
-        description: raw.description,
-        sourceName: raw.sourceName,
-        sourceUrl: raw.sourceUrl,
-        publishedAt: raw.publishedAt,
-        retrievedAt: new Date().toISOString(),
-        author: raw.author,
-        organization: raw.organization,
-        keywords: raw.keywords,
-        topics: raw.topics,
-        relevanceScore: analysis.relevanceScore,
-        impactScore: analysis.impactScore,
-        confidenceScore: analysis.confidenceScore,
-        summary: analysis.summary,
-        whyItMatters: analysis.whyItMatters,
-        status: 'verified',
-        metadata: {
-          arxivId: raw.arxivId,
-          doi: raw.doi,
-        },
-        fingerprint: raw.fingerprint,
-      });
-
-      if (saved) {
-        newlySavedItems.push(saved);
-        const alert = await evaluateItemAlerts(saved, project);
-        if (alert) alertsCount++;
+        if (saved) {
+          newlySavedItems.push(saved);
+          const alert = await evaluateItemAlerts(saved, project);
+          if (alert) alertsCount++;
+        }
+      } catch (itemErr) {
+        errors.push(`Error saving arXiv item: ${(itemErr as Error).message}`);
       }
-    } catch (itemErr) {
-      errors.push(`Error saving arXiv item: ${(itemErr as Error).message}`);
-    }
-  }
+    })
+  );
 
-  // 4. Process & Store OpenAlex Records
-  for (const raw of openAlexRecords) {
-    try {
-      const analysis = await analyzeIntelligenceItem(
-        {
+  // 4. Process & Store OpenAlex Records in parallel
+  await Promise.all(
+    openAlexRecords.map(async (raw) => {
+      try {
+        const analysis = await analyzeIntelligenceItem(
+          {
+            type: 'research',
+            title: raw.title,
+            description: raw.description,
+            sourceName: raw.sourceName,
+            sourceUrl: raw.sourceUrl,
+            author: raw.author,
+            organization: raw.organization,
+            keywords: raw.keywords,
+          },
+          projectContext
+        );
+
+        const saved = await saveIntelligenceItem({
+          projectId: project.id,
+          userId: project.userId,
           type: 'research',
           title: raw.title,
           description: raw.description,
           sourceName: raw.sourceName,
           sourceUrl: raw.sourceUrl,
+          publishedAt: raw.publishedAt,
+          retrievedAt: new Date().toISOString(),
           author: raw.author,
           organization: raw.organization,
           keywords: raw.keywords,
-        },
-        projectContext
-      );
+          topics: raw.topics,
+          relevanceScore: analysis.relevanceScore,
+          impactScore: analysis.impactScore,
+          confidenceScore: analysis.confidenceScore,
+          summary: analysis.summary,
+          whyItMatters: analysis.whyItMatters,
+          status: 'verified',
+          metadata: {
+            doi: raw.doi,
+            citationCount: raw.citationCount,
+          },
+          fingerprint: raw.fingerprint,
+        });
 
-      const saved = await saveIntelligenceItem({
-        projectId: project.id,
-        userId: project.userId,
-        type: 'research',
-        title: raw.title,
-        description: raw.description,
-        sourceName: raw.sourceName,
-        sourceUrl: raw.sourceUrl,
-        publishedAt: raw.publishedAt,
-        retrievedAt: new Date().toISOString(),
-        author: raw.author,
-        organization: raw.organization,
-        keywords: raw.keywords,
-        topics: raw.topics,
-        relevanceScore: analysis.relevanceScore,
-        impactScore: analysis.impactScore,
-        confidenceScore: analysis.confidenceScore,
-        summary: analysis.summary,
-        whyItMatters: analysis.whyItMatters,
-        status: 'verified',
-        metadata: {
-          doi: raw.doi,
-          citationCount: raw.citationCount,
-        },
-        fingerprint: raw.fingerprint,
-      });
-
-      if (saved) {
-        newlySavedItems.push(saved);
-        const alert = await evaluateItemAlerts(saved, project);
-        if (alert) alertsCount++;
+        if (saved) {
+          newlySavedItems.push(saved);
+          const alert = await evaluateItemAlerts(saved, project);
+          if (alert) alertsCount++;
+        }
+      } catch (itemErr) {
+        errors.push(`Error saving OpenAlex item: ${(itemErr as Error).message}`);
       }
-    } catch (itemErr) {
-      errors.push(`Error saving OpenAlex item: ${(itemErr as Error).message}`);
-    }
-  }
+    })
+  );
 
-  // 5. Process & Store Patent Records
-  for (const raw of patentRecords) {
-    try {
-      const analysis = await analyzeIntelligenceItem(
-        {
+  // 5. Process & Store Patent Records in parallel
+  await Promise.all(
+    patentRecords.map(async (raw) => {
+      try {
+        const analysis = await analyzeIntelligenceItem(
+          {
+            type: 'patent',
+            title: raw.title,
+            description: raw.description,
+            sourceName: raw.sourceName,
+            sourceUrl: raw.sourceUrl,
+            organization: raw.assignee,
+            keywords: raw.keywords,
+          },
+          projectContext
+        );
+
+        const saved = await saveIntelligenceItem({
+          projectId: project.id,
+          userId: project.userId,
           type: 'patent',
           title: raw.title,
           description: raw.description,
           sourceName: raw.sourceName,
           sourceUrl: raw.sourceUrl,
+          publishedAt: raw.publishedAt,
+          retrievedAt: new Date().toISOString(),
           organization: raw.assignee,
           keywords: raw.keywords,
-        },
-        projectContext
-      );
+          topics: [raw.technologyClass],
+          relevanceScore: analysis.relevanceScore,
+          impactScore: analysis.impactScore,
+          confidenceScore: analysis.confidenceScore,
+          summary: analysis.summary,
+          whyItMatters: analysis.whyItMatters,
+          status: 'verified',
+          metadata: {
+            patentId: raw.patentId,
+            applicationId: raw.applicationId,
+            assignee: raw.assignee,
+            technologyClass: raw.technologyClass,
+          },
+          fingerprint: raw.fingerprint,
+        });
 
-      const saved = await saveIntelligenceItem({
-        projectId: project.id,
-        userId: project.userId,
-        type: 'patent',
-        title: raw.title,
-        description: raw.description,
-        sourceName: raw.sourceName,
-        sourceUrl: raw.sourceUrl,
-        publishedAt: raw.publishedAt,
-        retrievedAt: new Date().toISOString(),
-        organization: raw.assignee,
-        keywords: raw.keywords,
-        topics: [raw.technologyClass],
-        relevanceScore: analysis.relevanceScore,
-        impactScore: analysis.impactScore,
-        confidenceScore: analysis.confidenceScore,
-        summary: analysis.summary,
-        whyItMatters: analysis.whyItMatters,
-        status: 'verified',
-        metadata: {
-          patentId: raw.patentId,
-          applicationId: raw.applicationId,
-          assignee: raw.assignee,
-          technologyClass: raw.technologyClass,
-        },
-        fingerprint: raw.fingerprint,
-      });
-
-      if (saved) {
-        newlySavedItems.push(saved);
-        const alert = await evaluateItemAlerts(saved, project);
-        if (alert) alertsCount++;
+        if (saved) {
+          newlySavedItems.push(saved);
+          const alert = await evaluateItemAlerts(saved, project);
+          if (alert) alertsCount++;
+        }
+      } catch (itemErr) {
+        errors.push(`Error saving patent item: ${(itemErr as Error).message}`);
       }
-    } catch (itemErr) {
-      errors.push(`Error saving patent item: ${(itemErr as Error).message}`);
-    }
-  }
+    })
+  );
 
-  // 6. Process & Store News / Competitor Records
-  for (const raw of newsRecords) {
-    try {
-      const itemType = raw.isCompetitor ? 'competitor' : 'news';
-      const analysis = await analyzeIntelligenceItem(
-        {
+  // 6. Process & Store News / Competitor Records in parallel
+  await Promise.all(
+    newsRecords.map(async (raw) => {
+      try {
+        const itemType = raw.isCompetitor ? 'competitor' : 'news';
+        const analysis = await analyzeIntelligenceItem(
+          {
+            type: itemType,
+            title: raw.title,
+            description: raw.description,
+            sourceName: raw.sourceName,
+            sourceUrl: raw.sourceUrl,
+            organization: raw.organization,
+            author: raw.author,
+            keywords: raw.keywords,
+          },
+          projectContext
+        );
+
+        const saved = await saveIntelligenceItem({
+          projectId: project.id,
+          userId: project.userId,
           type: itemType,
           title: raw.title,
           description: raw.description,
           sourceName: raw.sourceName,
           sourceUrl: raw.sourceUrl,
+          publishedAt: raw.publishedAt,
+          retrievedAt: new Date().toISOString(),
           organization: raw.organization,
           author: raw.author,
           keywords: raw.keywords,
-        },
-        projectContext
-      );
+          topics: [raw.topic],
+          relevanceScore: analysis.relevanceScore,
+          impactScore: analysis.impactScore,
+          confidenceScore: analysis.confidenceScore,
+          summary: analysis.summary,
+          whyItMatters: analysis.whyItMatters,
+          status: 'verified',
+          metadata: {
+            competitorName: raw.competitorName,
+            activityType: raw.isCompetitor ? 'news' : undefined,
+          },
+          fingerprint: raw.fingerprint,
+        });
 
-      const saved = await saveIntelligenceItem({
-        projectId: project.id,
-        userId: project.userId,
-        type: itemType,
-        title: raw.title,
-        description: raw.description,
-        sourceName: raw.sourceName,
-        sourceUrl: raw.sourceUrl,
-        publishedAt: raw.publishedAt,
-        retrievedAt: new Date().toISOString(),
-        organization: raw.organization,
-        author: raw.author,
-        keywords: raw.keywords,
-        topics: [raw.topic],
-        relevanceScore: analysis.relevanceScore,
-        impactScore: analysis.impactScore,
-        confidenceScore: analysis.confidenceScore,
-        summary: analysis.summary,
-        whyItMatters: analysis.whyItMatters,
-        status: 'verified',
-        metadata: {
-          competitorName: raw.competitorName,
-          activityType: raw.isCompetitor ? 'news' : undefined,
-        },
-        fingerprint: raw.fingerprint,
-      });
-
-      if (saved) {
-        newlySavedItems.push(saved);
-        const alert = await evaluateItemAlerts(saved, project);
-        if (alert) alertsCount++;
+        if (saved) {
+          newlySavedItems.push(saved);
+          const alert = await evaluateItemAlerts(saved, project);
+          if (alert) alertsCount++;
+        }
+      } catch (itemErr) {
+        errors.push(`Error saving news item: ${(itemErr as Error).message}`);
       }
-    } catch (itemErr) {
-      errors.push(`Error saving news item: ${(itemErr as Error).message}`);
-    }
-  }
+    })
+  );
 
   // 7. Synthesize Strategic AI Insights from newly saved items
   let insightsCount = 0;
