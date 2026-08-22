@@ -18,6 +18,24 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversationsLoading, setConversationsLoading] = useState(true);
 
+  // Hydrate conversations from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexora_chat_conversations');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setConversations(parsed);
+            setConversationsLoading(false);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
   // Redirect unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
@@ -41,8 +59,11 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.conversations)) {
         setConversations(data.conversations);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('nexora_chat_conversations', JSON.stringify(data.conversations));
+        }
       }
     } catch {
       // Silent fail — conversations will show empty
@@ -159,7 +180,13 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setConversations((prev) => [newConv, ...prev]);
+      setConversations((prev) => {
+        const updated = [newConv, ...prev.filter((c) => c.id !== id)];
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('nexora_chat_conversations', JSON.stringify(updated));
+        }
+        return updated;
+      });
       // Update URL to include conversation ID
       router.replace(`/chat/${id}`);
     },

@@ -3,7 +3,7 @@
 // ============================================================
 // Sidebar Component — Unified NEXORA Navigation & Chat Sessions
 // ============================================================
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
@@ -35,21 +35,66 @@ export function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const { activeProject, activeProjectId } = useProjectSession();
   const router = useRouter();
   const pathname = usePathname() || '';
+  const [internalConversations, setInternalConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [intelExpanded, setIntelExpanded] = useState(true);
 
+  // Initialize and auto-fetch conversations if not provided or empty
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexora_chat_conversations');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setInternalConversations(parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const loadConversations = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+
+        const res = await fetch('/api/conversations', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.conversations)) {
+          setInternalConversations(data.conversations);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('nexora_chat_conversations', JSON.stringify(data.conversations));
+          }
+        }
+      } catch {
+        // silent
+      }
+    };
+
+    if (user) {
+      loadConversations();
+    }
+  }, [user, getToken]);
+
   const isChatRoute = pathname.startsWith('/chat');
   const isIntelRoute = pathname.startsWith('/intelligence');
   const isProjectsRoute = pathname.startsWith('/projects');
   const isReportsRoute = pathname.startsWith('/reports');
   const isSettingsRoute = pathname.startsWith('/settings');
+
+  const effectiveConversations =
+    conversations && conversations.length > 0 ? conversations : internalConversations;
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,13 +110,34 @@ export function Sidebar({
     setEditTitle(conv.title);
   }, []);
 
-  const handleConfirmRename = useCallback(() => {
+  const handleConfirmRename = useCallback(async () => {
     if (editingId && editTitle.trim()) {
-      onRenameConversation?.(editingId, editTitle.trim());
+      if (onRenameConversation) {
+        onRenameConversation(editingId, editTitle.trim());
+      } else {
+        try {
+          const token = await getToken();
+          if (token) {
+            await fetch(`/api/conversations/${editingId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ title: editTitle.trim() }),
+            });
+            setInternalConversations((prev) =>
+              prev.map((c) => (c.id === editingId ? { ...c, title: editTitle.trim() } : c))
+            );
+          }
+        } catch {
+          // silent
+        }
+      }
     }
     setEditingId(null);
     setEditTitle('');
-  }, [editingId, editTitle, onRenameConversation]);
+  }, [editingId, editTitle, onRenameConversation, getToken]);
 
   const handleKeyDownRename = useCallback(
     (e: React.KeyboardEvent) => {
@@ -85,12 +151,51 @@ export function Sidebar({
   );
 
   const handleDelete = useCallback(
-    (id: string) => {
-      onDeleteConversation?.(id);
+    async (id: string) => {
+      if (onDeleteConversation) {
+        onDeleteConversation(id);
+      } else {
+        try {
+          const token = await getToken();
+          if (token) {
+            await fetch(`/api/conversations/${id}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            setInternalConversations((prev) => prev.filter((c) => c.id !== id));
+            if (activeConversationId === id) {
+              router.push('/chat');
+            }
+          }
+        } catch {
+          // silent
+        }
+      }
       setDeletingId(null);
     },
-    [onDeleteConversation]
+    [onDeleteConversation, getToken, activeConversationId, router]
   );
+
+  const handleSelectConv = useCallback(
+    (id: string) => {
+      if (onSelectConversation) {
+        onSelectConversation(id);
+      } else {
+        router.push(`/chat/${id}`);
+      }
+      onClose();
+    },
+    [onSelectConversation, router, onClose]
+  );
+
+  const handleNewChatClick = useCallback(() => {
+    if (onNewChat) {
+      onNewChat();
+    } else {
+      router.push('/chat');
+    }
+    onClose();
+  }, [onNewChat, router, onClose]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -100,6 +205,13 @@ export function Sidebar({
       // Silent fail
     }
   }, [router]);
+
+  // Filter conversations by search
+  const filteredList = searchQuery.trim()
+    ? effectiveConversations.filter((c) =>
+        c.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : effectiveConversations;
 
   // Group conversations by date
   const today = new Date();
@@ -115,8 +227,8 @@ export function Sidebar({
   const lastWeekItems: Conversation[] = [];
   const olderItems: Conversation[] = [];
 
-  conversations.forEach((conv) => {
-    const date = new Date(conv.updatedAt);
+  filteredList.forEach((conv) => {
+    const date = new Date(conv.updatedAt || conv.createdAt);
     if (date >= today) {
       todayItems.push(conv);
     } else if (date >= yesterday) {
@@ -338,87 +450,79 @@ export function Sidebar({
         {/* Divider */}
         <div className="sidebar-divider" />
 
-        {/* Chat Conversations Drawer (Active when in /chat or if conversations exist) */}
-        {isChatRoute && (
-          <>
-            <div className="sidebar-header">
-              <button
-                onClick={() => {
-                  onNewChat?.();
-                  onClose();
-                }}
-                className="new-chat-btn"
-                type="button"
-                id="btn-new-chat"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span>New chat</span>
-              </button>
-            </div>
+        {/* Chat Conversations Drawer */}
+        <div className="sidebar-header">
+          <button
+            onClick={handleNewChatClick}
+            className="new-chat-btn"
+            type="button"
+            id="btn-new-chat"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span>New chat</span>
+          </button>
+        </div>
 
-            {/* Search */}
-            <div className="sidebar-search">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="search-icon" aria-hidden="true">
-                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search chats..."
-                className="sidebar-search-input"
-                aria-label="Search conversations"
-                id="sidebar-search"
-              />
-            </div>
+        {/* Search */}
+        <div className="sidebar-search">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="search-icon" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Search chats..."
+            className="sidebar-search-input"
+            aria-label="Search conversations"
+            id="sidebar-search"
+          />
+        </div>
 
-            {/* Conversation list */}
-            <nav className="sidebar-conversations" aria-label="Conversations">
-              {conversations.length === 0 ? (
-                <div className="sidebar-empty">
-                  <p>{searchQuery ? 'No results found' : 'No conversations yet'}</p>
-                </div>
-              ) : (
-                groups.map((group) => (
-                  <div key={group.label} className="conversation-group">
-                    <h3 className="conversation-group-label">{group.label}</h3>
-                    {group.items.map((conv) => (
-                      <div
-                        key={conv.id}
-                        className={`conversation-item ${
-                          conv.id === activeConversationId ? 'conversation-item-active' : ''
-                        }`}
+        {/* Conversation list */}
+        <nav className="sidebar-conversations" aria-label="Conversations">
+          {effectiveConversations.length === 0 ? (
+            <div className="sidebar-empty">
+              <p>{searchQuery ? 'No results found' : 'No conversations yet'}</p>
+            </div>
+          ) : (
+            groups.map((group) => (
+              <div key={group.label} className="conversation-group">
+                <h3 className="conversation-group-label">{group.label}</h3>
+                {group.items.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`conversation-item ${
+                      conv.id === activeConversationId ? 'conversation-item-active' : ''
+                    }`}
+                  >
+                    {editingId === conv.id ? (
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={handleKeyDownRename}
+                        onBlur={handleConfirmRename}
+                        className="conversation-rename-input"
+                        autoFocus
+                        aria-label="Rename conversation"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => handleSelectConv(conv.id)}
+                        className="conversation-item-btn"
+                        type="button"
+                        title={conv.title}
                       >
-                        {editingId === conv.id ? (
-                          <input
-                            type="text"
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            onKeyDown={handleKeyDownRename}
-                            onBlur={handleConfirmRename}
-                            className="conversation-rename-input"
-                            autoFocus
-                            aria-label="Rename conversation"
-                          />
-                        ) : (
-                          <button
-                            onClick={() => {
-                              onSelectConversation?.(conv.id);
-                              onClose();
-                            }}
-                            className="conversation-item-btn"
-                            type="button"
-                            title={conv.title}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                              <path d="M2 4H14M2 8H10M2 12H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            </svg>
-                            <span className="conversation-item-title">{conv.title}</span>
-                          </button>
-                        )}
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M2 4H14M2 8H10M2 12H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                        <span className="conversation-item-title">{conv.title}</span>
+                      </button>
+                    )}
 
                         {/* Item actions */}
                         {editingId !== conv.id && (
@@ -477,8 +581,6 @@ export function Sidebar({
                 ))
               )}
             </nav>
-          </>
-        )}
 
         {/* User profile area */}
         <div className="sidebar-footer">
