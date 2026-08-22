@@ -10,6 +10,17 @@ export type AlertPriority = 'low' | 'medium' | 'high' | 'critical';
 export type AlertStatus = 'unread' | 'read' | 'archived';
 export type TrendStatus = 'emerging' | 'growing' | 'stable' | 'declining';
 
+// --- Gemini Autonomous Project Analysis ---
+export interface GeminiProjectAnalysis {
+  executiveSummary: string;
+  keyFindings: string[];
+  competitorInsights: string[];
+  patentLandscape: string;
+  strategicRecommendations: string[];
+  aiScore: number;
+  generatedAt: string;
+}
+
 // --- Monitoring Project ---
 export interface MonitoringProject {
   id: string;
@@ -29,6 +40,7 @@ export interface MonitoringProject {
     priorityThreshold: AlertPriority;
   };
   status: ProjectStatus;
+  geminiAnalysis?: GeminiProjectAnalysis;
   lastRunAt?: string | null;
   itemCount?: number;
   createdAt: string; // ISO string

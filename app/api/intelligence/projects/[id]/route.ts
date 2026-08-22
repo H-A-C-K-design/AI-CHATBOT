@@ -25,9 +25,20 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const project = await getProject(userId, id);
+    let project = await getProject(userId, id);
     if (!project) {
       return NextResponse.json({ success: false, error: 'Project not found.' }, { status: 404 });
+    }
+
+    if (!project.geminiAnalysis) {
+      try {
+        const { analyzeProjectWithGemini } = await import('@/lib/intelligence/gemini-project-analyzer');
+        const geminiAnalysis = await analyzeProjectWithGemini(project);
+        project = { ...project, geminiAnalysis };
+        await updateProject(userId, id, { ...project });
+      } catch {
+        // silent
+      }
     }
 
     return NextResponse.json({ success: true, project });

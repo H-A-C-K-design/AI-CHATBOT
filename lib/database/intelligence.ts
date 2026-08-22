@@ -3,6 +3,7 @@
 // Strict User-Isolation & Real Database Operations
 // ============================================================
 import { adminDb } from '@/lib/firebase/admin';
+import { analyzeProjectWithGemini } from '@/lib/intelligence/gemini-project-analyzer';
 import type {
   MonitoringProject,
   CreateProjectInput,
@@ -16,6 +17,7 @@ import type {
   IntelligenceType,
   AlertStatus,
   AlertPriority,
+  GeminiProjectAnalysis,
 } from '@/types';
 
 const PROJECTS_COLLECTION = 'monitoring_projects';
@@ -46,6 +48,9 @@ export async function createProject(
   const now = new Date().toISOString();
   const id = `proj-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
+  // Autonomously run Gemini project intelligence analysis
+  const geminiAnalysis = await analyzeProjectWithGemini(input);
+
   const project: MonitoringProject = {
     id,
     userId,
@@ -64,6 +69,7 @@ export async function createProject(
       priorityThreshold: input.notificationPreferences?.priorityThreshold ?? 'high',
     },
     status: 'active',
+    geminiAnalysis,
     lastRunAt: null,
     itemCount: 0,
     createdAt: now,
