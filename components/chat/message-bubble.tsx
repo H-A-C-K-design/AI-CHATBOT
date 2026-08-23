@@ -182,9 +182,6 @@ export function MessageBubble({
         {/* Assistant Header */}
         <div className="chat-assistant-header">
           <span className="chat-assistant-name">NEXORA</span>
-          {message.modelUsed && (
-            <span className="chat-assistant-model-badge">{message.modelUsed}</span>
-          )}
         </div>
 
         {/* Collapsible Reasoning Process */}
