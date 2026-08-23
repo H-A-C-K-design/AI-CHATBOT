@@ -276,9 +276,46 @@ export interface MessagesListResponse {
   messages: Message[];
 }
 
+// --- Subscription & Pricing Plans ---
+export type PlanId = 'free' | 'go' | 'plus' | 'pro';
+export type PlanCategory = 'personal' | 'business';
+
+export interface PlanFeature {
+  text: string;
+  included: boolean;
+  highlight?: boolean;
+}
+
+export interface PlanTier {
+  id: PlanId;
+  name: string;
+  brandName: string; // e.g. "Try ChatGPT", "ChatGPT Go", "ChatGPT Plus", "ChatGPT Pro"
+  tagline: string; // e.g. "Try ChatGPT", "Keep chatting", "Your AI assistant", "Maximum power"
+  description: string;
+  price: number;
+  priceFormatted: string; // e.g. "₹0", "₹399", "₹1,999", "₹10,699"
+  period: string; // "/ month"
+  buttonText: string;
+  category: PlanCategory;
+  isCurrent?: boolean;
+  isRecommended?: boolean;
+  badge?: string; // e.g. "RECOMMENDED", "5x / 20x"
+  featuresHeader: string;
+  features: string[];
+}
+
+export interface UserSubscription {
+  planId: PlanId;
+  status: 'active' | 'trial' | 'expired';
+  activatedAt?: string;
+  upiTxRef?: string;
+  payeeName?: string;
+}
+
 // --- Re-export Intelligence, Agent, Research, Evaluation & Telemetry Types ---
 export * from './intelligence';
 export * from './agent';
 export * from './research-analysis';
 export * from './evaluation';
 export * from './telemetry';
+

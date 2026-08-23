@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { signOut } from '@/lib/firebase/auth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NexoraLogo } from '@/components/ui/nexora-logo';
+import { usePricing } from '@/components/pricing/pricing-context';
 import type { Conversation } from '@/types';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export function Sidebar({
   onClose,
 }: SidebarProps) {
   const { user, getToken } = useAuth();
+  const { currentPlan, openPricingModal } = usePricing();
   const router = useRouter();
   const pathname = usePathname() || '';
   const [internalConversations, setInternalConversations] = useState<Conversation[]>([]);
@@ -392,6 +394,17 @@ export function Sidebar({
           </Link>
 
           <Link
+            href="/pricing"
+            className={`chatgpt-nav-link ${pathname === '/pricing' ? 'chatgpt-nav-link-active' : ''}`}
+            onClick={onClose}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span>Pricing &amp; Plans</span>
+          </Link>
+
+          <Link
             href="/settings"
             className={`chatgpt-nav-link ${pathname === '/settings' ? 'chatgpt-nav-link-active' : ''}`}
             onClick={onClose}
@@ -405,6 +418,40 @@ export function Sidebar({
         </div>
 
         <div className="chatgpt-sidebar-divider" />
+
+        {/* Upgrade Plan Callout Banner */}
+        <div className="chatgpt-upgrade-banner-wrap">
+          <button
+            onClick={() => {
+              openPricingModal();
+              onClose();
+            }}
+            className="chatgpt-upgrade-plan-btn"
+            type="button"
+            title="Upgrade Plan"
+          >
+            <div className="upgrade-btn-left">
+              <span className="upgrade-sparkle-icon">✦</span>
+              <div className="upgrade-text-wrap">
+                <span className="upgrade-title">
+                  {currentPlan === 'free'
+                    ? 'Upgrade plan'
+                    : currentPlan === 'go'
+                      ? 'Upgrade to Nexora Plus'
+                      : currentPlan === 'plus'
+                        ? 'Upgrade to Nexora Pro'
+                        : 'Nexora Pro Active'}
+                </span>
+                <span className="upgrade-subtitle">
+                  {currentPlan === 'free'
+                    ? 'Unlock GPT-4o, Codex & More'
+                    : `Active: NEXORA ${currentPlan.toUpperCase()}`}
+                </span>
+              </div>
+            </div>
+            <span className="upgrade-arrow">&gt;</span>
+          </button>
+        </div>
 
         {/* Conversation History Section */}
         <nav className="chatgpt-history-scroll" aria-label="Recent Conversations">
@@ -483,7 +530,7 @@ export function Sidebar({
 
         {/* User Profile Footer */}
         <div className="chatgpt-user-footer">
-          <div className="chatgpt-user-pill">
+          <div className="chatgpt-user-pill" onClick={openPricingModal} role="button" title="View / Upgrade Plan" tabIndex={0}>
             {user?.photoURL ? (
               <img
                 src={user.photoURL}
@@ -498,6 +545,9 @@ export function Sidebar({
             )}
             <div className="chatgpt-user-details">
               <span className="chatgpt-username">{user?.displayName || 'User'}</span>
+              <span className={`chatgpt-user-plan-badge badge-plan-${currentPlan}`}>
+                {currentPlan.toUpperCase()}
+              </span>
             </div>
           </div>
 

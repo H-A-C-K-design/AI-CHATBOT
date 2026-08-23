@@ -9,10 +9,12 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { signOut } from '@/lib/firebase/auth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AI_MODELS, AI_PERSONAS } from '@/lib/ai/models';
+import { usePricing } from '@/components/pricing/pricing-context';
 import type { AIModelId, AIPersonaId } from '@/types';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
+  const { currentPlan, subscription, openPricingModal } = usePricing();
   const router = useRouter();
 
   // Model Preferences State
@@ -244,7 +246,73 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 3. Profile Section */}
+        {/* 3. Subscription & Billing Section */}
+        <section className="settings-section">
+          <div className="flex-between">
+            <h2 className="settings-section-title">Subscription &amp; Membership</h2>
+            <span className={`settings-plan-pill-tag badge-plan-${currentPlan}`}>
+              {currentPlan.toUpperCase()} TIER
+            </span>
+          </div>
+          <div className="settings-card">
+            <div className="settings-sub-details">
+              <div className="settings-sub-header">
+                <div>
+                  <h3 className="settings-sub-tier-name">
+                    {currentPlan === 'free'
+                      ? 'Nexora Free'
+                      : currentPlan === 'go'
+                        ? 'Nexora Go Plan'
+                        : currentPlan === 'plus'
+                          ? 'Nexora Plus Plan'
+                          : 'Nexora Pro Plan'}
+                  </h3>
+                  <p className="settings-sub-tier-desc">
+                    {currentPlan === 'free'
+                      ? 'Essential Gemini 3.5 Flash intelligence and standard chat capabilities.'
+                      : currentPlan === 'go'
+                        ? 'Gemini 3.6 Flash multimodal vision, GPT-4o Mini, and expanded 1M token context.'
+                        : currentPlan === 'plus'
+                          ? 'OpenAI GPT-4o, DeepSeek-R1 reasoning, Research Analyzer, and 20 GB storage.'
+                          : 'Frontier 20x compute limits, Agent Observability, Benchmarks, and 100 GB storage.'}
+                  </p>
+                </div>
+                <div className="settings-sub-actions">
+                  <button
+                    onClick={openPricingModal}
+                    className="settings-upgrade-btn"
+                    type="button"
+                  >
+                    <span>✦ {currentPlan === 'free' ? 'Upgrade Plan' : 'Change / Upgrade Plan'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {subscription?.upiTxRef && (
+                <div className="settings-sub-info-grid">
+                  <div className="settings-sub-info-item">
+                    <span className="settings-sub-info-label">Payment Mode</span>
+                    <span className="settings-sub-info-val">PhonePe UPI QR</span>
+                  </div>
+                  <div className="settings-sub-info-item">
+                    <span className="settings-sub-info-label">Payee Beneficiary</span>
+                    <span className="settings-sub-info-val">{subscription.payeeName || 'Durgesh Amol Gaikwad'}</span>
+                  </div>
+                  <div className="settings-sub-info-item">
+                    <span className="settings-sub-info-label">Transaction Ref</span>
+                    <span className="settings-sub-info-val"><code>{subscription.upiTxRef}</code></span>
+                  </div>
+                  <div className="settings-sub-info-item">
+                    <span className="settings-sub-info-label">Subscription Status</span>
+                    <span className="settings-sub-info-val text-success">Active &amp; Verified</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Profile Section */}
         <section className="settings-section">
           <h2 className="settings-section-title">Profile</h2>
           <div className="settings-card">

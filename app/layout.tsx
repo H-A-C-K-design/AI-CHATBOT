@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { ProjectProvider } from '@/lib/context/project-context';
+import { PricingProvider } from '@/components/pricing/pricing-context';
+import { PricingModal } from '@/components/pricing/pricing-modal';
+import { PhonePePaymentModal } from '@/components/pricing/phonepe-payment-modal';
 import { AntiInspect } from '@/components/security/anti-inspect';
 import './globals.css';
 
@@ -67,7 +70,13 @@ export default function RootLayout({
         <AntiInspect />
         <ThemeProvider>
           <AuthProvider>
-            <ProjectProvider>{children}</ProjectProvider>
+            <ProjectProvider>
+              <PricingProvider>
+                {children}
+                <PricingModal />
+                <PhonePePaymentModal />
+              </PricingProvider>
+            </ProjectProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

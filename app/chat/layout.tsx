@@ -8,10 +8,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
+import { usePricing } from '@/components/pricing/pricing-context';
 import type { Conversation } from '@/types';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, getToken } = useAuth();
+  const { currentPlan, openPricingModal } = usePricing();
   const router = useRouter();
   const pathname = usePathname();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -253,6 +255,17 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </h1>
 
           <div className="chat-header-actions">
+            {currentPlan !== 'pro' && (
+              <button
+                onClick={openPricingModal}
+                className="chat-header-upgrade-btn"
+                type="button"
+                title="Upgrade Plan"
+              >
+                <span className="sparkle-icon">✦</span>
+                <span>Upgrade</span>
+              </button>
+            )}
             <button
               onClick={handleNewChat}
               className="mobile-new-chat-btn"

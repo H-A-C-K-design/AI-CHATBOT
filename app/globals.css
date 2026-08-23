@@ -12617,6 +12617,1339 @@ html, body {
   font-size: 13px;
 }
 
+/* ============================================================
+   PRICING & SUBSCRIPTION MODAL & PHONEPE PAYMENT STYLES
+   Faithful to ChatGPT Plans & Official PhonePe UPI Flow
+   ============================================================ */
+
+/* Overlay */
+.pricing-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  padding: 16px;
+  animation: fadeInModal 200ms ease-out forwards;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Modal Wrapper */
+.pricing-modal-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #0f172a);
+  border-radius: 24px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+  padding: 32px 36px 40px;
+}
+
+/* Close Button */
+.pricing-modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-tertiary, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+  z-index: 10;
+}
+
+.pricing-modal-close-btn:hover {
+  background: var(--bg-hover, #e2e8f0);
+  color: var(--text-primary, #0f172a);
+  transform: rotate(90deg);
+}
+
+/* Standalone container */
+.pricing-dialog-container {
+  width: 100%;
+}
+
+.pricing-standalone-view {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Header & Tabs */
+.pricing-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.pricing-find-fit-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.pricing-tab-toggle {
+  display: inline-flex;
+  background: var(--bg-tertiary, #f1f5f9);
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+}
+
+.pricing-tab-btn {
+  padding: 6px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.pricing-tab-active {
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #0f172a);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Pricing Grid */
+.pricing-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.pricing-cards-grid-business {
+  grid-template-columns: repeat(2, minmax(0, 480px));
+  justify-content: center;
+}
+
+@media (max-width: 1100px) {
+  .pricing-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-cards-grid,
+  .pricing-cards-grid-business {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Individual Card */
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+  border-radius: 20px;
+  padding: 24px 20px 28px;
+  position: relative;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Highlighted (Plus) Card */
+.pricing-card-highlighted {
+  border: 1.5px solid #3b82f6;
+  background: var(--bg-card, #ffffff);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+}
+
+.dark .pricing-card-highlighted {
+  border-color: #3b82f6;
+  background: #181c26;
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.2);
+}
+
+/* Card Header */
+.pricing-card-header {
+  margin-bottom: 18px;
+}
+
+.pricing-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  min-height: 26px;
+}
+
+.pricing-plan-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.pricing-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.pricing-badge-recommended {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.dark .pricing-badge-recommended {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.pricing-badge-pro {
+  background: var(--bg-tertiary, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.1));
+}
+
+.pricing-badge-default {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.pricing-plan-tagline {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.pricing-plan-description {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary, #64748b);
+  min-height: 48px;
+  margin: 0;
+}
+
+/* Price */
+.pricing-card-price-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 16px 0 20px;
+}
+
+.pricing-price-amount {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary, #0f172a);
+}
+
+.pricing-price-amount sup {
+  font-size: 16px;
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.pricing-price-period {
+  font-size: 13px;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* CTA Buttons */
+.pricing-card-cta-wrap {
+  margin-bottom: 24px;
+}
+
+.pricing-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+  border: none;
+  text-decoration: none;
+}
+
+.pricing-btn-current {
+  background: var(--bg-tertiary, #f1f5f9);
+  color: var(--text-tertiary, #94a3b8);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+  cursor: default;
+}
+
+.pricing-btn-dark {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.pricing-btn-dark:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.dark .pricing-btn-dark {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.dark .pricing-btn-dark:hover {
+  background: #e2e8f0;
+}
+
+.pricing-btn-plus {
+  background: #007aff;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+}
+
+.pricing-btn-plus:hover {
+  background: #0069dc;
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Features List */
+.pricing-card-features-section {
+  border-top: 1px solid var(--border-secondary, rgba(0, 0, 0, 0.06));
+  padding-top: 18px;
+  flex-grow: 1;
+}
+
+.pricing-features-heading {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 12px;
+}
+
+.pricing-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pricing-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary, #475569);
+}
+
+.pricing-feature-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.pricing-disclaimer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-tertiary, #94a3b8);
+  margin-top: 8px;
+}
+
+/* ============================================================
+   PHONEPE PAYMENT MODAL STYLES
+   Official PhonePe Purple: #5f259f, Accent: #6739b6
+   ============================================================ */
+
+.phonepe-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 820px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--bg-card, #ffffff);
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+  padding: 30px;
+}
+
+.phonepe-content-wrap {
+  width: 100%;
+}
+
+/* Header Banner */
+.phonepe-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+  margin-bottom: 24px;
+}
+
+.phonepe-badge-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.phonepe-logo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #5f259f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(95, 37, 159, 0.35);
+}
+
+.phonepe-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.phonepe-brand-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #5f259f;
+  letter-spacing: -0.02em;
+}
+
+.dark .phonepe-brand-title {
+  color: #9333ea;
+}
+
+.phonepe-brand-sub {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #5f259f;
+  opacity: 0.9;
+}
+
+.dark .phonepe-brand-sub {
+  color: #a855f7;
+}
+
+.phonepe-plan-summary-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: var(--bg-tertiary, #f1f5f9);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.06));
+}
+
+.phonepe-summary-plan {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+}
+
+.phonepe-summary-amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+/* Body Grid */
+.phonepe-body-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px;
+}
+
+@media (max-width: 768px) {
+  .phonepe-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* QR Column */
+.phonepe-qr-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-secondary, #f8fafc);
+  padding: 20px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.06));
+}
+
+.phonepe-scan-instruction {
+  font-size: 13.5px;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.phonepe-qr-frame {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 250px;
+}
+
+.phonepe-qr-image-container {
+  width: 226px;
+  height: 360px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.phonepe-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.phonepe-payee-name-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.phonepe-payee-verified-icon {
+  background: #10b981;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.phonepe-supported-apps {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.phonepe-apps-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.upi-app-tag {
+  background: var(--bg-tertiary, #f1f5f9);
+  color: var(--text-secondary, #475569);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Form Column */
+.phonepe-form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.phonepe-info-card {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.06));
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.phonepe-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.phonepe-info-label {
+  color: var(--text-secondary, #64748b);
+  font-weight: 500;
+}
+
+.phonepe-info-value {
+  color: var(--text-primary, #0f172a);
+  font-weight: 700;
+}
+
+.phonepe-upi-copy-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phonepe-upi-code {
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  background: var(--bg-input, #ffffff);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.1));
+}
+
+.phonepe-copy-btn {
+  background: #5f259f;
+  color: #ffffff;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.phonepe-copy-btn:hover {
+  background: #4e1c84;
+}
+
+.phonepe-copied-text {
+  color: #a7f3d0;
+}
+
+.phonepe-total-row {
+  border-top: 1px dashed var(--border-primary, rgba(0, 0, 0, 0.1));
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.phonepe-total-amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: #5f259f;
+}
+
+.dark .phonepe-total-amount {
+  color: #a855f7;
+}
+
+/* Steps Box */
+.phonepe-steps-box {
+  background: rgba(95, 37, 159, 0.05);
+  border: 1px solid rgba(95, 37, 159, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.phonepe-steps-heading {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5f259f;
+  margin: 0 0 6px;
+}
+
+.dark .phonepe-steps-heading {
+  color: #c084fc;
+}
+
+.phonepe-steps-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #475569);
+}
+
+.phonepe-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phonepe-input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+}
+
+.phonepe-text-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  background: var(--bg-input, #ffffff);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  color: var(--text-primary, #0f172a);
+}
+
+.phonepe-text-input:focus {
+  outline: none;
+  border-color: #5f259f;
+  box-shadow: 0 0 0 3px rgba(95, 37, 159, 0.15);
+}
+
+/* Actions */
+.phonepe-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.phonepe-confirm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #5f259f, #7c3aed);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(95, 37, 159, 0.35);
+  transition: all 180ms ease;
+}
+
+.phonepe-confirm-btn:hover {
+  background: linear-gradient(135deg, #531f8b, #6d28d9);
+  box-shadow: 0 6px 20px rgba(95, 37, 159, 0.45);
+  transform: translateY(-1px);
+}
+
+.phonepe-confirm-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.phonepe-btn-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.phonepe-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+.phonepe-back-btn {
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.1));
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.phonepe-back-btn:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  color: var(--text-primary, #0f172a);
+}
+
+.phonepe-footer-copy {
+  font-size: 10.5px;
+  color: var(--text-tertiary, #94a3b8);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Success Screen */
+.phonepe-success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.phonepe-success-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  border: 2px solid #a7f3d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: popIn 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.dark .phonepe-success-icon-wrap {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.phonepe-success-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 8px;
+}
+
+.phonepe-success-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary, #64748b);
+  max-width: 480px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.phonepe-receipt-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.phonepe-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+}
+
+.phonepe-receipt-row strong {
+  color: var(--text-primary, #0f172a);
+}
+
+.phonepe-status-pill {
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.phonepe-action-primary-btn {
+  padding: 12px 32px;
+  background: #10b981;
+  color: #ffffff;
+  border-radius: 9999px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 180ms ease;
+}
+
+.phonepe-action-primary-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   SIDEBAR & HEADER UPGRADE INTEGRATION
+   ============================================================ */
+
+.chatgpt-upgrade-banner-wrap {
+  padding: 4px 12px 8px;
+}
+
+.chatgpt-upgrade-plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(95, 37, 159, 0.1), rgba(37, 99, 235, 0.12));
+  border: 1px solid rgba(95, 37, 159, 0.25);
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  transition: all 180ms ease;
+  text-align: left;
+}
+
+.dark .chatgpt-upgrade-plan-btn {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(59, 130, 246, 0.15));
+  border-color: rgba(147, 51, 234, 0.35);
+}
+
+.chatgpt-upgrade-plan-btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(95, 37, 159, 0.18), rgba(37, 99, 235, 0.2));
+  box-shadow: 0 4px 12px rgba(95, 37, 159, 0.15);
+}
+
+.upgrade-btn-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upgrade-sparkle-icon {
+  font-size: 16px;
+  color: #9333ea;
+  filter: drop-shadow(0 0 4px rgba(147, 51, 234, 0.5));
+}
+
+.upgrade-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.upgrade-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.upgrade-subtitle {
+  font-size: 10.5px;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.upgrade-arrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* User Plan Badge in sidebar footer */
+.chatgpt-user-plan-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+  width: fit-content;
+}
+
+.badge-plan-free {
+  background: var(--bg-tertiary, #e2e8f0);
+  color: var(--text-secondary, #64748b);
+}
+
+.badge-plan-go {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dark .badge-plan-go {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.badge-plan-plus {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dark .badge-plan-plus {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.badge-plan-pro {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.dark .badge-plan-pro {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+/* Chat Header Upgrade Button */
+.chat-header-upgrade-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #007aff, #6366f1);
+  color: #ffffff;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+  transition: all 150ms ease;
+}
+
+.chat-header-upgrade-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+.chat-header-upgrade-btn .sparkle-icon {
+  font-size: 11px;
+}
+
+/* Settings Subscription Card */
+.settings-plan-pill-tag {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+}
+
+.settings-sub-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-sub-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-sub-tier-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 4px;
+}
+
+.settings-sub-tier-desc {
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.45;
+  margin: 0;
+  max-width: 600px;
+}
+
+.settings-upgrade-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: #007aff;
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.settings-upgrade-btn:hover {
+  background: #0066d6;
+  transform: translateY(-1px);
+}
+
+.settings-sub-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-primary, rgba(0, 0, 0, 0.08));
+}
+
+.settings-sub-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-sub-info-label {
+  font-size: 11.5px;
+  color: var(--text-tertiary, #94a3b8);
+  font-weight: 500;
+}
+
+.settings-sub-info-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+/* Standalone /pricing Page Layout */
+.pricing-page-wrapper {
+  min-height: 100vh;
+  background: var(--bg-primary, #0e0e11);
+  color: var(--text-primary, #f1f5f9);
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-glass, rgba(18, 18, 23, 0.82));
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+  padding: 12px 24px;
+}
+
+.pricing-nav-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pricing-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.pricing-brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pricing-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pricing-current-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary, #1f1f26);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+}
+
+.pricing-current-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.pricing-back-chat-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--bg-tertiary, #1f1f26);
+  color: var(--text-primary, #f1f5f9);
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pricing-back-chat-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+}
+
+.pricing-main-content {
+  flex: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  width: 100%;
+}
+
+.pricing-hero-section {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 40px;
+}
+
+.pricing-pill-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #38bdf8;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pricing-page-title {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+
+.pricing-page-sub {
+  font-size: 16px;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pricing-standalone-cards-wrap {
+  margin-bottom: 64px;
+}
+
+/* FAQ Section */
+.pricing-faq-section {
+  border-top: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+  padding-top: 48px;
+}
+
+.pricing-faq-title {
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.pricing-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .pricing-faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pricing-faq-item {
+  background: var(--bg-card, #16161c);
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.pricing-faq-question {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--text-primary, #f1f5f9);
+}
+
+.pricing-faq-answer {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+}
+
+.pricing-footer {
+  border-top: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+  padding: 24px;
+  background: var(--bg-secondary, #16161b);
+}
+
+.pricing-footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text-tertiary, #64748b);
+}
+
+.pricing-footer .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pricing-footer .footer-links {
+  display: flex;
+  gap: 16px;
+}
+
+.pricing-footer .footer-link {
+  color: var(--text-secondary, #94a3b8);
+  text-decoration: none;
+}
+
+.pricing-footer .footer-link:hover {
+  color: var(--text-primary, #f1f5f9);
+}
+
+
 
 
 
