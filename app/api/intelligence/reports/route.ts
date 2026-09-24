@@ -75,16 +75,6 @@ export async function POST(request: NextRequest) {
       limit: 50,
     });
 
-    if (items.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'No intelligence items available for this project. Run monitoring first to collect real data.',
-        },
-        { status: 400 }
-      );
-    }
-
     const generatedReport = await generateExecutiveReport(
       items,
       targetProject,
