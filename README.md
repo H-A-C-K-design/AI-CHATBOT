@@ -56,31 +56,8 @@ cd "AI CHATBOT HACK"
 npm install
 ```
 
-### 2. Environment Configuration
 
-Create a `.env.local` file with your credentials:
-
-```env
-# Firebase Client Configuration (public)
-NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
-
-# Firebase Admin Configuration (private)
-FIREBASE_ADMIN_PROJECT_ID=your-project-id
-FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-
-# Real AI Provider API Keys (configure at least one)
-GEMINI_API_KEY=your-gemini-api-key
-OPENAI_API_KEY=your-openai-api-key
-DEEPSEEK_API_KEY=your-deepseek-api-key
-```
-
-### 3. Run Development Server
+### 2. Run Development Server
 
 ```bash
 npm run dev
