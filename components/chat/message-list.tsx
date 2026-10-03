@@ -76,7 +76,7 @@ export function MessageList({
             </div>
             <div className="message-content-wrapper">
               <div className="message-header-bar">
-                <span className="message-role-label">NEXORA AI</span>
+                <span className="message-role-label">Feed Forge AI</span>
               </div>
               <div className="message-content">
                 <div className="thinking-indicator" role="status" aria-label="AI is thinking">

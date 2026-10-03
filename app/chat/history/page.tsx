@@ -171,9 +171,9 @@ export default function ChatHistoryPage() {
       }
 
       if (format === 'txt') {
-        let txt = `NEXORA AI — History Session: ${conv.title}\nDate: ${new Date(conv.updatedAt).toLocaleString()}\n\n`;
+        let txt = `Feed Forge AI — History Session: ${conv.title}\nDate: ${new Date(conv.updatedAt).toLocaleString()}\n\n`;
         messages.forEach((m: { role: string; content: string; modelUsed?: string }) => {
-          const sender = m.role === 'user' ? 'YOU' : `NEXORA AI (${m.modelUsed || conv.model || 'AI'})`;
+          const sender = m.role === 'user' ? 'YOU' : `Feed Forge AI (${m.modelUsed || conv.model || 'AI'})`;
           txt += `[${sender}]\n${m.content}\n\n----------------------------------------\n\n`;
         });
         const blob = new Blob([txt], { type: 'text/plain' });
@@ -190,7 +190,7 @@ export default function ChatHistoryPage() {
       let md = `# Session: ${conv.title}\n\n`;
       md += `*Model: ${conv.model || 'Multi-AI'} • Persona: ${conv.persona || 'Assistant'} • Last Active: ${new Date(conv.updatedAt).toLocaleString()}*\n\n---\n\n`;
       messages.forEach((m: { role: string; content: string; modelUsed?: string }) => {
-        const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 NEXORA AI (${m.modelUsed || conv.model || 'Assistant'})`;
+        const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 Feed Forge AI (${m.modelUsed || conv.model || 'Assistant'})`;
         md += `${sender}\n\n${m.content}\n\n---\n\n`;
       });
       const blob = new Blob([md], { type: 'text/markdown' });

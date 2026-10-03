@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// NEXORA AI — Official Landing & Home Page
+// Feed Forge AI — Official Landing & Home Page
 // ============================================================
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -18,7 +18,7 @@ export default function HomePage() {
     python: `from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Nexora API Service", version="2.0.0")
+app = FastAPI(title="Feed Forge AI API Service", version="2.0.0")
 
 class ChatPrompt(BaseModel):
     conversation_id: str
@@ -27,7 +27,7 @@ class ChatPrompt(BaseModel):
 
 @app.post("/v1/chat/completions")
 async def generate_response(prompt: ChatPrompt):
-    # Process with Nexora AI workflow engine
+    # Process with Feed Forge AI workflow engine
     response = await process_n8n_agent(prompt)
     return {"status": "success", "data": response}`,
     typescript: `import { NextRequest, NextResponse } from 'next/server';
@@ -67,7 +67,7 @@ LIMIT 20;`,
         <div className="landing-nav-inner">
           <Link href="/" className="landing-brand">
             <NexoraLogo size={32} withBackground={true} glow={true} />
-            <span className="landing-brand-name">NEXORA AI</span>
+            <span className="landing-brand-name">Feed Forge AI</span>
           </Link>
 
           <nav className="landing-nav-links">
@@ -109,11 +109,11 @@ LIMIT 20;`,
       <section className="landing-hero">
         <div className="hero-badge">
           <span className="hero-badge-dot" />
-          <span>Nexora AI 2.0 • Autonomous Coding &amp; Reasoning</span>
+          <span>Feed Forge AI 2.0 • Autonomous Coding &amp; Reasoning</span>
         </div>
 
         <h1 className="hero-headline">
-          Supercharge your coding with <span className="hero-gradient-text">NEXORA AI</span>
+          Supercharge your coding with <span className="hero-gradient-text">Feed Forge AI</span>
         </h1>
 
         <p className="hero-subtext">
@@ -123,7 +123,7 @@ LIMIT 20;`,
 
         <div className="hero-ctas">
           <Link href={user ? '/chat' : '/login'} className="hero-cta-primary">
-            <span>{user ? 'Go to Chat' : 'Start Free with Nexora'}</span>
+            <span>{user ? 'Go to Chat' : 'Start Free with Feed Forge AI'}</span>
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 8H13M13 8L8 3M13 8L8 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -142,7 +142,7 @@ LIMIT 20;`,
                 <span className="window-dot dot-yellow" />
                 <span className="window-dot dot-green" />
               </div>
-              <span className="window-title">nexora-ai / chat / session-prod</span>
+              <span className="window-title">feed-forge-ai / chat / session-prod</span>
               <div className="window-badge">Active Session</div>
             </div>
 
@@ -328,7 +328,7 @@ async def authenticate_jwt(request: Request):
       {/* Call to Action Banner */}
       <section className="landing-cta-banner">
         <div className="cta-banner-inner">
-          <h2 className="cta-title">Ready to build with Nexora AI?</h2>
+          <h2 className="cta-title">Ready to build with Feed Forge AI?</h2>
           <p className="cta-subtitle">
             Sign in with your email or social account to start generating code and automating your workflow today.
           </p>
@@ -349,9 +349,9 @@ async def authenticate_jwt(request: Request):
           <div className="footer-left">
             <div className="footer-brand-wrap">
               <NexoraLogo size={24} withBackground={true} />
-              <span className="footer-logo">NEXORA AI</span>
+              <span className="footer-logo">Feed Forge AI</span>
             </div>
-            <span className="footer-copy">© {new Date().getFullYear()} Nexora AI. All rights reserved.</span>
+            <span className="footer-copy">© {new Date().getFullYear()} Feed Forge AI. All rights reserved.</span>
           </div>
           <div className="footer-links">
             <Link href="/login" className="footer-link">Sign In</Link>

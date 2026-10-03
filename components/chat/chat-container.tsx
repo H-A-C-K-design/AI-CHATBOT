@@ -323,26 +323,26 @@ export function ChatContainer({
       }
 
       if (format === 'txt') {
-        let txt = `NEXORA AI — Conversation Transcript\nDate: ${new Date().toLocaleString()}\n\n`;
+        let txt = `Feed Forge AI — Conversation Transcript\nDate: ${new Date().toLocaleString()}\n\n`;
         messages.forEach((m) => {
-          const sender = m.role === 'user' ? 'YOU' : `NEXORA AI (${m.modelUsed || 'Assistant'})`;
+          const sender = m.role === 'user' ? 'YOU' : `Feed Forge AI (${m.modelUsed || 'Assistant'})`;
           txt += `[${sender}]\n${m.content}\n\n----------------------------------------\n\n`;
         });
         const blob = new Blob([txt], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `nexora-chat-${Date.now()}.txt`;
+        a.download = `feed-forge-chat-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
         return;
       }
 
       // Default: Markdown (.md)
-      let md = `# Conversation Export — NEXORA AI\n\n`;
+      let md = `# Conversation Export — Feed Forge AI\n\n`;
       md += `*Exported on ${new Date().toLocaleString()}*\n\n---\n\n`;
       messages.forEach((m) => {
-        const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 NEXORA AI (${m.modelUsed || 'Assistant'})`;
+        const sender = m.role === 'user' ? '### 👤 You' : `### 🤖 Feed Forge AI (${m.modelUsed || 'Assistant'})`;
         md += `${sender}\n\n${m.content}\n\n---\n\n`;
       });
 
@@ -350,7 +350,7 @@ export function ChatContainer({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `nexora-chat-${Date.now()}.md`;
+      a.download = `feed-forge-chat-${Date.now()}.md`;
       a.click();
       URL.revokeObjectURL(url);
     },
@@ -359,9 +359,9 @@ export function ChatContainer({
 
   const handleCopyHistory = useCallback(() => {
     if (messages.length === 0) return;
-    let fullText = `NEXORA AI Conversation\n\n`;
+    let fullText = `Feed Forge AI Conversation\n\n`;
     messages.forEach((m) => {
-      const sender = m.role === 'user' ? 'You' : `NEXORA (${m.modelUsed || 'AI'})`;
+      const sender = m.role === 'user' ? 'You' : `Feed Forge (${m.modelUsed || 'AI'})`;
       fullText += `${sender}:\n${m.content}\n\n`;
     });
     navigator.clipboard.writeText(fullText.trim());

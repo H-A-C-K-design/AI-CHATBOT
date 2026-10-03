@@ -72,7 +72,7 @@ export default function AgentEvaluationDashboardPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nexora_agent_benchmark_${Date.now()}.json`;
+    a.download = `feed_forge_agent_benchmark_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -216,7 +216,7 @@ export default function AgentEvaluationDashboardPage() {
               className={`eval-tab-btn ${activeTab === 'baseline' ? 'eval-tab-active' : ''}`}
               onClick={() => setActiveTab('baseline')}
             >
-              <span>⚡ Baseline Comparison (NEXORA vs Vanilla LLM)</span>
+              <span>⚡ Baseline Comparison (Feed Forge vs Vanilla LLM)</span>
             </button>
             <button
               type="button"
@@ -404,10 +404,10 @@ export default function AgentEvaluationDashboardPage() {
             <div className="eval-tab-pane">
               <div className="eval-card">
                 <h3 className="eval-card-title">
-                  ⚡ NEXORA Cognitive Agent vs Standard Direct LLM Baseline
+                  ⚡ Feed Forge Cognitive Agent vs Standard Direct LLM Baseline
                 </h3>
                 <p className="eval-card-desc">
-                  Empirical head-to-head evaluation across 6 core capabilities comparing NEXORA&apos;s
+                  Empirical head-to-head evaluation across 6 core capabilities comparing Feed Forge&apos;s
                   5-stage cognitive lifecycle against unguided baseline prompting.
                 </p>
 
@@ -416,7 +416,7 @@ export default function AgentEvaluationDashboardPage() {
                     <thead>
                       <tr>
                         <th>Evaluation Dimension</th>
-                        <th>NEXORA Agent</th>
+                        <th>Feed Forge Agent</th>
                         <th>Standard Baseline</th>
                         <th>Relative Improvement</th>
                         <th>Statistical Confidence</th>

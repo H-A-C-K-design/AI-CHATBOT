@@ -181,7 +181,7 @@ export function MessageBubble({
       <div className="chat-assistant-content-wrapper">
         {/* Assistant Header */}
         <div className="chat-assistant-header">
-          <span className="chat-assistant-name">NEXORA</span>
+          <span className="chat-assistant-name">Feed Forge</span>
         </div>
 
         {/* Collapsible Reasoning Process */}

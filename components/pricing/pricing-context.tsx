@@ -12,7 +12,7 @@ export const PERSONAL_PLANS: PlanTier[] = [
     id: 'free',
     name: 'Free',
     brandName: 'Free',
-    tagline: 'Try Nexora AI',
+    tagline: 'Try Feed Forge AI',
     description: 'Essential AI access for exploring ideas, fast answers, and learning code fundamentals.',
     price: 0,
     priceFormatted: '₹0',
@@ -30,8 +30,8 @@ export const PERSONAL_PLANS: PlanTier[] = [
   },
   {
     id: 'go',
-    name: 'Nexora Go',
-    brandName: 'Nexora Go',
+    name: 'Feed Forge Go',
+    brandName: 'Feed Forge Go',
     tagline: 'Keep building',
     description: 'Expanded chats, Gemini 3.6 Flash multimodal vision, and faster daily workflows.',
     price: 399,
@@ -51,8 +51,8 @@ export const PERSONAL_PLANS: PlanTier[] = [
   },
   {
     id: 'plus',
-    name: 'Nexora Plus',
-    brandName: 'Nexora Plus',
+    name: 'Feed Forge Plus',
+    brandName: 'Feed Forge Plus',
     tagline: 'Your AI powerhouse',
     description: 'Unlock flagship OpenAI GPT-4o, DeepSeek-R1 chain-of-thought reasoning, and autonomous agents.',
     price: 1999,
@@ -75,8 +75,8 @@ export const PERSONAL_PLANS: PlanTier[] = [
   },
   {
     id: 'pro',
-    name: 'Nexora Pro',
-    brandName: 'Nexora Pro',
+    name: 'Feed Forge Pro',
+    brandName: 'Feed Forge Pro',
     tagline: 'Maximum power',
     description: 'For developers and teams who demand frontier models, deep telemetry, and maximum speed.',
     price: 10699,
@@ -101,8 +101,8 @@ export const PERSONAL_PLANS: PlanTier[] = [
 export const BUSINESS_PLANS: PlanTier[] = [
   {
     id: 'plus',
-    name: 'Nexora Team',
-    brandName: 'Nexora Team',
+    name: 'Feed Forge Team',
+    brandName: 'Feed Forge Team',
     tagline: 'Supercharge your team',
     description: 'Collaborative AI workspace with shared GPT agents, team administration, and higher limits.',
     price: 2499,
@@ -123,8 +123,8 @@ export const BUSINESS_PLANS: PlanTier[] = [
   },
   {
     id: 'pro',
-    name: 'Nexora Enterprise',
-    brandName: 'Nexora Enterprise',
+    name: 'Feed Forge Enterprise',
+    brandName: 'Feed Forge Enterprise',
     tagline: 'Custom controls & scale',
     description: 'Enterprise-grade security, unlimited high-speed frontier access, and dedicated support.',
     price: 4999,

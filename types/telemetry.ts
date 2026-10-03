@@ -1,5 +1,5 @@
 // ============================================================
-// NEXORA AI Observability & End-to-End Tracing Type Definitions
+// Feed Forge AI Observability & End-to-End Tracing Type Definitions
 // OpenTelemetry & Langfuse Compliant Agent Telemetry Schema
 // ============================================================
 

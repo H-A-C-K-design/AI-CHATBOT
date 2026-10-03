@@ -59,7 +59,7 @@ export default function IntelligenceLayout({
 
           <div className="chat-header-brand-tag">
             <span className="brand-dot" />
-            <span>NEXORA AI • Autonomous Intelligence Platform</span>
+            <span>Feed Forge AI • Autonomous Intelligence Platform</span>
           </div>
 
           <div className="chat-header-actions">

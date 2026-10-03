@@ -1,4 +1,4 @@
-# NEXORA AI — Intelligent Multi-Model Coding Companion
+# Feed Forge AI — Intelligent Multi-Model Coding Companion
 
 A high-performance, real-time ChatGPT-style developer workspace powered by **100% Real Multi-AI Engines** (Google Gemini, OpenAI GPT-4o, DeepSeek-R1) and **Firebase Authentication**.
 

@@ -57,7 +57,7 @@ export default function ReportsLayout({
 
           <div className="chat-header-brand-tag">
             <span className="brand-dot" />
-            <span>NEXORA AI • Intelligence Reports</span>
+            <span>Feed Forge AI • Intelligence Reports</span>
           </div>
 
           <div className="chat-header-actions">

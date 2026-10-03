@@ -62,7 +62,7 @@ export default function ReportsPage() {
   const handleConnectWorkspace = async () => {
     try {
       setIsGenerating(true);
-      setStatusMsg('Connecting workspace project to Nexora Intelligence...');
+      setStatusMsg('Connecting workspace project to Feed Forge Intelligence...');
       const token = await getToken();
       if (!token) return;
 
@@ -73,7 +73,7 @@ export default function ReportsPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: 'AI Chatbot Hack (Nexora Workspace)',
+          name: 'Feed Forge AI Workspace',
           description: 'Production-ready full-stack AI conversational platform with Multi-AI routing, PhonePe UPI payments, real-time SSE streaming, and intelligent agents.',
           industry: 'Artificial Intelligence & Developer Tools',
           keywords: ['Next.js', 'OpenAI GPT-4o', 'Google Gemini', 'DeepSeek-R1', 'Firestore', 'PhonePe UPI', 'TypeScript', 'AI Agent'],
@@ -170,7 +170,7 @@ export default function ReportsPage() {
       <div className="report-generator-card">
         <div className="report-gen-card-header">
           <h2 className="report-gen-title">Generate New Executive Briefing</h2>
-          <span className="report-gen-subtitle">Powered by Nexora Multi-AI Intelligence Engine</span>
+          <span className="report-gen-subtitle">Powered by Feed Forge Multi-AI Intelligence Engine</span>
         </div>
 
         <form onSubmit={handleGenerateReport} className="report-gen-form">

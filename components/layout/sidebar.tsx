@@ -259,7 +259,7 @@ export function Sidebar({
         <div className="chatgpt-sidebar-header">
           <Link href="/chat" className="chatgpt-brand-wrap" onClick={onClose}>
             <NexoraLogo size={24} withBackground={true} glow={true} />
-            <span className="chatgpt-brand-title">NEXORA AI</span>
+            <span className="chatgpt-brand-title">Feed Forge AI</span>
           </Link>
 
           <button
@@ -437,15 +437,15 @@ export function Sidebar({
                   {currentPlan === 'free'
                     ? 'Upgrade plan'
                     : currentPlan === 'go'
-                      ? 'Upgrade to Nexora Plus'
+                      ? 'Upgrade to Feed Forge Plus'
                       : currentPlan === 'plus'
-                        ? 'Upgrade to Nexora Pro'
-                        : 'Nexora Pro Active'}
+                        ? 'Upgrade to Feed Forge Pro'
+                        : 'Feed Forge Pro Active'}
                 </span>
                 <span className="upgrade-subtitle">
                   {currentPlan === 'free'
                     ? 'Unlock GPT-4o, Codex & More'
-                    : `Active: NEXORA ${currentPlan.toUpperCase()}`}
+                    : `Active: FEED FORGE ${currentPlan.toUpperCase()}`}
                 </span>
               </div>
             </div>

@@ -23,7 +23,7 @@ export async function analyzeProjectWithGemini(
 
   if (apiKey) {
     try {
-      const prompt = `You are Google Gemini acting as the Lead Intelligence Architect for NEXORA AI.
+      const prompt = `You are Google Gemini acting as the Lead Intelligence Architect for Feed Forge AI.
 Perform an in-depth autonomous intelligence analysis and technical landscape synthesis for this monitoring project.
 
 PROJECT PARAMETERS:

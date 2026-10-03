@@ -93,7 +93,7 @@ export default function ReportDetailPage({
       <article className="report-document-sheet">
         {/* Document Header */}
         <header className="report-doc-header">
-          <div className="report-doc-badge">NEXORA AI EXECUTIVE INTELLIGENCE</div>
+          <div className="report-doc-badge">FEED FORGE AI EXECUTIVE INTELLIGENCE</div>
           <h1 className="report-doc-title">{report.title}</h1>
           <div className="report-doc-meta">
             <span><strong>Project:</strong> {report.projectName || 'Active Intelligence Workspace'}</span>

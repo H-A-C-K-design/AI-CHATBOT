@@ -421,13 +421,13 @@ export function Composer({
             onPaste={handlePaste}
             placeholder={
               enableIntelligenceRAG
-                ? 'Ask NEXORA with live web & intelligence search...'
-                : 'Ask NEXORA anything...'
+                ? 'Ask Feed Forge AI with live web & intelligence search...'
+                : 'Ask Feed Forge AI anything...'
             }
             className="chatgpt-composer-textarea"
             rows={1}
             disabled={disabled}
-            aria-label="Ask NEXORA anything"
+            aria-label="Ask Feed Forge AI anything"
             id="chatgpt-composer-textarea"
           />
         </div>
@@ -736,7 +736,7 @@ export function Composer({
       </div>
 
       <div className="chatgpt-composer-disclaimer">
-        <span>NEXORA AI can make mistakes. Verify important information.</span>
+        <span>Feed Forge AI can make mistakes. Verify important information.</span>
       </div>
 
       {/* Knowledge & File Library Modal */}

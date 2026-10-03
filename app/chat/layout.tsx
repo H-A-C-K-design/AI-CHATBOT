@@ -251,7 +251,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           <h1 className="chat-header-title">
             {activeConversationId
               ? conversations.find((c) => c.id === activeConversationId)?.title || 'Chat'
-              : 'NEXORA AI'}
+              : 'Feed Forge AI'}
           </h1>
 
           <div className="chat-header-actions">

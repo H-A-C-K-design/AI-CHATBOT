@@ -57,7 +57,7 @@ export default function ProjectsLayout({
 
           <div className="chat-header-brand-tag">
             <span className="brand-dot" />
-            <span>NEXORA AI • Monitoring Projects</span>
+            <span>Feed Forge AI • Monitoring Projects</span>
           </div>
 
           <div className="chat-header-actions">

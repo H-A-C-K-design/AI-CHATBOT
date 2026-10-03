@@ -22,9 +22,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'NEXORA AI — Intelligent AI Workspace & Coding Companion',
+  title: 'Feed Forge AI — Intelligent AI Workspace & Coding Companion',
   description:
-    'NEXORA AI is a production-grade AI platform for developers and creators. Code generation, deep debugging, automated workflows, and conversational intelligence.',
+    'Feed Forge AI is a production-grade AI platform for developers and creators. Code generation, deep debugging, automated workflows, and conversational intelligence.',
   icons: {
     icon: '/logo.png',
     shortcut: '/logo.png',

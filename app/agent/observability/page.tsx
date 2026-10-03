@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// NEXORA AI Observability & End-to-End Tracing Dashboard
+// Feed Forge AI Observability & End-to-End Tracing Dashboard
 // OpenTelemetry & Langfuse Compatible Live Telemetry
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
@@ -215,7 +215,7 @@ export default function AgentObservabilityPage() {
         <div className="eval-tab-pane">
           <div className="eval-card">
             <h3 className="eval-card-title">
-              ⚡ Before vs After Telemetry Benchmark: Unguided LLM vs Traced NEXORA Agent
+              ⚡ Before vs After Telemetry Benchmark: Unguided LLM vs Traced Feed Forge Agent
             </h3>
             <p className="eval-card-desc">
               Real-world empirical performance comparison measuring unhandled failure rates, latency speedups, token budget efficiency,
@@ -228,7 +228,7 @@ export default function AgentObservabilityPage() {
                   <tr>
                     <th>Evaluation Dimension</th>
                     <th>Before (Unguided LLM)</th>
-                    <th>After (NEXORA with Tracing &amp; Fallback)</th>
+                    <th>After (Feed Forge with Tracing &amp; Fallback)</th>
                     <th>Net Improvement</th>
                     <th>Impact Summary</th>
                   </tr>

@@ -50,7 +50,7 @@ export async function analyzeIntelligenceItem(
     return fallbackScore(item, projectContext);
   }
 
-  const prompt = `You are the NEXORA AI Intelligence Engine.
+  const prompt = `You are the Feed Forge AI Intelligence Engine.
 Analyze the following collected public record in the context of the user's monitoring project.
 
 MONITORING PROJECT CONTEXT:
@@ -248,7 +248,7 @@ export async function generateStrategicInsights(
     )
     .join('\n\n');
 
-  const prompt = `You are the NEXORA AI Strategic Intelligence Analyst.
+  const prompt = `You are the Feed Forge AI Strategic Intelligence Analyst.
 Synthesize actionable strategic intelligence insights from the following real collected records for project "${project.name}" (Industry: ${project.industry}).
 
 COLLECTED REAL RECORDS:
@@ -425,7 +425,7 @@ export async function generateExecutiveReport(
     : [
         {
           title: `Distributed Context Window Routing & Token Memory (US Patent 2026/01489)`,
-          organization: 'Nexora AI Core Lab',
+          organization: 'Feed Forge AI Core Lab',
           sourceUrl: 'https://patents.google.com/patent/US202601489A1',
           summary: `Patented architecture for hybrid client-side token memory caching and Firestore user-isolated security rules.`,
         },

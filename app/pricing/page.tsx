@@ -23,7 +23,7 @@ export default function PricingPage() {
         <div className="pricing-nav-inner">
           <Link href="/chat" className="pricing-brand-wrap">
             <NexoraLogo size={28} withBackground={true} glow={true} />
-            <span className="pricing-brand-name">NEXORA AI</span>
+            <span className="pricing-brand-name">Feed Forge AI</span>
           </Link>
 
           <div className="pricing-nav-actions">
@@ -69,21 +69,21 @@ export default function PricingPage() {
             <div className="pricing-faq-item">
               <h3 className="pricing-faq-question">How does PhonePe UPI payment work?</h3>
               <p className="pricing-faq-answer">
-                When you choose an upgrade plan (Nexora Go, Nexora Plus, or Nexora Pro), an official PhonePe QR code is generated. Scan it directly from your PhonePe, Google Pay, Paytm, or BHIM app to complete the payment to <strong>Durgesh Amol Gaikwad</strong>. Your plan activates immediately upon confirmation.
+                When you choose an upgrade plan (Feed Forge Go, Feed Forge Plus, or Feed Forge Pro), an official PhonePe QR code is generated. Scan it directly from your PhonePe, Google Pay, Paytm, or BHIM app to complete the payment to <strong>Durgesh Amol Gaikwad</strong>. Your plan activates immediately upon confirmation.
               </p>
             </div>
 
             <div className="pricing-faq-item">
               <h3 className="pricing-faq-question">Can I switch plans at any time?</h3>
               <p className="pricing-faq-answer">
-                Yes! You can upgrade from Nexora Go to Nexora Plus or Nexora Pro at any time. Simply select the new plan and complete the corresponding UPI QR payment.
+                Yes! You can upgrade from Feed Forge Go to Feed Forge Plus or Feed Forge Pro at any time. Simply select the new plan and complete the corresponding UPI QR payment.
               </p>
             </div>
 
             <div className="pricing-faq-item">
-              <h3 className="pricing-faq-question">What frontier models are included in Nexora Plus and Pro?</h3>
+              <h3 className="pricing-faq-question">What frontier models are included in Feed Forge Plus and Pro?</h3>
               <p className="pricing-faq-answer">
-                Nexora Plus includes OpenAI GPT-4o, DeepSeek-R1 reasoning, Google Gemini 3.6 Flash multimodal vision, Auto Smart Router, and the Research Paper Analyzer. Nexora Pro offers 20x higher compute limits, Agent Observability traces &amp; telemetry, Agent Evals &amp; Benchmarks, and 100 GB storage.
+                Feed Forge Plus includes OpenAI GPT-4o, DeepSeek-R1 reasoning, Google Gemini 3.6 Flash multimodal vision, Auto Smart Router, and the Research Paper Analyzer. Feed Forge Pro offers 20x higher compute limits, Agent Observability traces &amp; telemetry, Agent Evals &amp; Benchmarks, and 100 GB storage.
               </p>
             </div>
 
@@ -105,7 +105,7 @@ export default function PricingPage() {
         <div className="pricing-footer-inner">
           <div className="footer-left">
             <NexoraLogo size={20} withBackground={true} />
-            <span>© {new Date().getFullYear()} Nexora AI. All rights reserved. PhonePe accepted.</span>
+            <span>© {new Date().getFullYear()} Feed Forge AI. All rights reserved. PhonePe accepted.</span>
           </div>
           <div className="footer-links">
             <Link href="/chat" className="footer-link">Chat</Link>

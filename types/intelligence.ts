@@ -1,5 +1,5 @@
 // ============================================================
-// NEXORA AI — Intelligence Module Type Definitions
+// Feed Forge AI — Intelligence Module Type Definitions
 // ============================================================
 
 export type MonitoringFrequency = 'hourly' | 'six_hourly' | 'daily' | 'weekly';

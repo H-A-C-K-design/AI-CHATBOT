@@ -146,7 +146,7 @@ export function LoginForm() {
         <div className="login-logo">
           <NexoraLogo size={64} withBackground={true} glow={true} />
         </div>
-        <h1 className="login-title">NEXORA AI</h1>
+        <h1 className="login-title">Feed Forge AI</h1>
         <p className="login-subtitle">Your intelligent coding companion powered by AI</p>
       </div>
 

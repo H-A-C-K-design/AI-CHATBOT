@@ -276,7 +276,7 @@ export function PhonePePaymentModal() {
                 </div>
 
                 <div className="phonepe-footer-copy">
-                  ©2026, All rights reserved, PhonePe Internet Pvt. Ltd. &amp; Nexora AI
+                  ©2026, All rights reserved, PhonePe Internet Pvt. Ltd. &amp; Feed Forge AI
                 </div>
               </div>
             </div>

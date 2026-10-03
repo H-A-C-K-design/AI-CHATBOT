@@ -29,8 +29,8 @@ const SAMPLE_LIBRARY: LibraryItem[] = [
     category: 'docs',
     size: 4200,
     type: 'text/markdown',
-    description: 'NEXORA AI system architecture, microservices, and latency specs',
-    content: `# NEXORA AI Architecture Specifications
+    description: 'Feed Forge AI system architecture, microservices, and latency specs',
+    content: `# Feed Forge AI Architecture Specifications
 - Frontend: Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript
 - AI Routing: Multi-Provider Gateway (Gemini 3.5/3.6, GPT-4o, DeepSeek R1)
 - Autonomous Agent: Step-by-step tool execution engine with sandboxed inspection

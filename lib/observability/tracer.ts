@@ -1,5 +1,5 @@
 // ============================================================
-// NEXORA AI Observability & End-to-End Tracing Engine
+// Feed Forge AI Observability & End-to-End Tracing Engine
 // OpenTelemetry & Langfuse Compliant Agent Telemetry Tracer
 // Tracks Agents, Prompts, Decisions, Tools, Latency, Tokens & Failure Recovery
 // ============================================================
@@ -39,7 +39,7 @@ export function startTrace(params: {
     startTime: Date.now(),
     durationMs: 0,
     status: 'running',
-    tags: params.tags || ['agent', 'nexora', 'production'],
+    tags: params.tags || ['agent', 'feed-forge', 'production'],
     metadata: params.metadata || {},
     spans: [],
     totalTokens: 0,
@@ -419,7 +419,7 @@ function seedInitialTraceSync(): void {
     endTime: Date.now(),
     durationMs: 480,
     status: 'completed',
-    tags: ['production', 'opentelemetry', 'langfuse', 'nexora'],
+    tags: ['production', 'opentelemetry', 'langfuse', 'feed-forge'],
     metadata: { environment: 'production', framework: 'nextjs-agent' },
     spans: [
       {

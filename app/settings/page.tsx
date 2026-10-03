@@ -260,12 +260,12 @@ export default function SettingsPage() {
                 <div>
                   <h3 className="settings-sub-tier-name">
                     {currentPlan === 'free'
-                      ? 'Nexora Free'
+                      ? 'Feed Forge Free'
                       : currentPlan === 'go'
-                        ? 'Nexora Go Plan'
+                        ? 'Feed Forge Go Plan'
                         : currentPlan === 'plus'
-                          ? 'Nexora Plus Plan'
-                          : 'Nexora Pro Plan'}
+                          ? 'Feed Forge Plus Plan'
+                          : 'Feed Forge Pro Plan'}
                   </h3>
                   <p className="settings-sub-tier-desc">
                     {currentPlan === 'free'

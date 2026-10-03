@@ -1,8 +1,8 @@
 'use client';
 
 // ============================================================
-// NEXORA AI Official Logo Component
-// Renders the Official Nexora AI Hexagonal "N" Emblem from /logo.jpg
+// Feed Forge AI Official Logo Component
+// Renders the Official Feed Forge AI Emblem
 // ============================================================
 import React from 'react';
 import Image from 'next/image';
@@ -41,7 +41,7 @@ export function NexoraLogo({
     >
       <Image
         src="/nexora-emblem.png"
-        alt="NEXORA AI Logo"
+        alt="Feed Forge AI Logo"
         width={size}
         height={size}
         style={{
