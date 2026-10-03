@@ -94,10 +94,11 @@ Respond ONLY with a valid JSON object matching this schema:
 
     if (process.env.GEMINI_API_KEY) {
       const modelsToTry = [
-        process.env.GEMINI_MODEL || 'gemini-3.6-flash',
-        'gemini-3.6-flash',
-        'gemini-flash-latest',
-        'gemini-3.5-flash',
+        process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-2.5-pro',
       ];
       const uniqueModels = Array.from(new Set(modelsToTry));
 
@@ -285,10 +286,11 @@ Respond ONLY with a valid JSON array:
     let jsonStr = '';
     if (process.env.GEMINI_API_KEY) {
       const modelsToTry = [
-        process.env.GEMINI_MODEL || 'gemini-3.6-flash',
-        'gemini-3.6-flash',
-        'gemini-flash-latest',
-        'gemini-3.5-flash',
+        process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-2.5-pro',
       ];
       const uniqueModels = Array.from(new Set(modelsToTry));
 

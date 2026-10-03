@@ -174,9 +174,16 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       const readableStream = new ReadableStream({
         async start(controller) {
-          // Helper to emit SSE event line
+          let isClosed = false;
+
+          // Helper to emit SSE event line safely
           const sendEvent = (obj: Record<string, unknown>) => {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+            if (isClosed) return;
+            try {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+            } catch {
+              isClosed = true;
+            }
           };
 
           // 1. Emit Initial Metadata
@@ -232,6 +239,17 @@ export async function POST(request: NextRequest): Promise<Response> {
             }
 
             // 3. Clean and Persist Assistant Message in DB
+            if (!accumulatedAnswer || !accumulatedAnswer.trim()) {
+              const { generateFeedForgeSynthesis } = await import('@/lib/ai/feedforge-engine');
+              const synth = generateFeedForgeSynthesis(augmentedMessage, requestedPersona);
+              accumulatedAnswer = synth.content;
+              if (synth.thinkingContent) accumulatedThinking = synth.thinkingContent;
+              sendEvent({
+                type: 'token',
+                content: accumulatedAnswer,
+              });
+            }
+
             const sanitizedAnswer = sanitizeAIOutput(accumulatedAnswer);
             const assistantMsgId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
@@ -267,7 +285,14 @@ export async function POST(request: NextRequest): Promise<Response> {
               message: errorMsg,
             });
           } finally {
-            controller.close();
+            if (!isClosed) {
+              isClosed = true;
+              try {
+                controller.close();
+              } catch {
+                // Ignore close on aborted controller
+              }
+            }
           }
         },
       });

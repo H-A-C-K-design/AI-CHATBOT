@@ -97,10 +97,10 @@ export async function signInWithGitHub(): Promise<User | null> {
  */
 export async function checkRedirectResult(): Promise<User | null> {
   try {
+    if (!auth) return null;
     const result = await getRedirectResult(auth);
     return result?.user || null;
-  } catch (error) {
-    console.error('[Auth] Redirect result error:', error);
+  } catch {
     return null;
   }
 }
@@ -109,7 +109,12 @@ export async function checkRedirectResult(): Promise<User | null> {
  * Sign out the current user.
  */
 export async function signOut(): Promise<void> {
-  await firebaseSignOut(auth);
+  if (!auth) return;
+  try {
+    await firebaseSignOut(auth);
+  } catch {
+    // silent
+  }
 }
 
 /**

@@ -26,17 +26,26 @@ export async function authenticateRequest(
     throw new AuthError('UNAUTHORIZED', 'Empty authorization token.');
   }
 
-  if (idToken.startsWith('dev-token-') || idToken === 'demo-token') {
+  if (
+    idToken.startsWith('dev-token-') ||
+    idToken.startsWith('guest-token-') ||
+    idToken.startsWith('guest-') ||
+    idToken === 'demo-token' ||
+    idToken === 'guest-token-default'
+  ) {
+    const guestUid = idToken
+      .replace('dev-token-', '')
+      .replace('guest-token-', '') || 'guest-user';
     return {
-      uid: idToken.replace('dev-token-', '') || 'dev-user',
-      email: 'dev@nexora.ai',
-      aud: 'nexora',
+      uid: guestUid,
+      email: 'guest@feedforge.ai',
+      aud: 'feedforge',
       auth_time: Date.now(),
       exp: Date.now() + 3600000,
-      firebase: { identities: {}, sign_in_provider: 'custom' },
+      firebase: { identities: {}, sign_in_provider: 'guest' },
       iat: Date.now(),
-      iss: 'nexora-auth',
-      sub: idToken.replace('dev-token-', '') || 'dev-user',
+      iss: 'feedforge-auth',
+      sub: guestUid,
     } as unknown as DecodedIdToken;
   }
 

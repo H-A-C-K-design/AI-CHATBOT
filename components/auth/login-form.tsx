@@ -14,16 +14,18 @@ import {
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { NexoraLogo } from '@/components/ui/nexora-logo';
+import { useAuth } from '@/components/auth/auth-provider';
 
 export function LoginForm() {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [loading, setLoading] = useState<'email' | 'google' | 'github' | 'reset' | null>(null);
+  const [loading, setLoading] = useState<'email' | 'google' | 'github' | 'reset' | 'guest' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
+  const { loginAsGuest } = useAuth();
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +141,19 @@ export function LoginForm() {
     }
   };
 
+  const handleGuestLogin = () => {
+    setLoading('guest');
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      loginAsGuest();
+      router.push('/chat');
+    } catch {
+      setError('Failed to initialize guest session.');
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="login-form">
       {/* Logo & Branding */}
@@ -148,6 +163,37 @@ export function LoginForm() {
         </div>
         <h1 className="login-title">Feed Forge AI</h1>
         <p className="login-subtitle">Your intelligent coding companion powered by AI</p>
+      </div>
+
+      {/* Guest Mode Hero Action */}
+      <div className="login-guest-section">
+        <button
+          id="btn-guest-login"
+          type="button"
+          disabled={loading !== null}
+          onClick={handleGuestLogin}
+          className="login-btn-guest"
+        >
+          <div className="login-guest-left">
+            <span className="login-guest-icon">⚡</span>
+            <div className="login-guest-text">
+              <span className="login-guest-title">Continue as Guest (Instant Access)</span>
+              <span className="login-guest-desc">Test all chat, code generation & intelligence tools without an account</span>
+            </div>
+          </div>
+          {loading === 'guest' ? (
+            <span className="login-spinner" aria-hidden="true" />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="login-guest-arrow">
+              <path d="M5 12h14" />
+              <path d="M12 5l7 7-7 7" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      <div className="login-divider">
+        <span>or sign in with your account</span>
       </div>
 
       {/* Mode Tabs */}
@@ -298,7 +344,7 @@ export function LoginForm() {
 
       {/* Divider */}
       <div className="login-divider">
-        <span>or continue with</span>
+        <span>or continue with OAuth</span>
       </div>
 
       {/* OAuth Buttons */}

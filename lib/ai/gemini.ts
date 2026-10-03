@@ -17,25 +17,42 @@ export interface StreamGeminiOptions {
   signal?: AbortSignal;
 }
 
-const DEFAULT_SYSTEM_INSTRUCTION = `You are Feed Forge AI, a world-class, Principal AI Software Engineer and Intelligent Workspace Companion.
-- ALWAYS write 100% COMPLETE, fully functional, unbroken, and production-ready code. NEVER cut off code in the middle, never omit implementations, and NEVER use lazy placeholders like '// ... rest of code' or '// TODO implement here'.
-- INTERACTIVE ANIMATIONS & VISUALS: Whenever the user asks for an animation, interactive visualization, 3D effect, particle system, canvas simulation, game, or UI animation, ALWAYS provide a complete, self-contained, interactive HTML5 / CSS / Canvas / JavaScript code block inside a \`\`\`html block. Include full inline <style> and <script> tags so it immediately executes in the live interactive animation runner. Make it responsive, visually stunning with smooth 60fps animations, interactive on mousemove/clicks, and beautifully styled.
-- If providing a script, component, or module, provide the entire working code with imports, types, proper error handling, and export statements.
-- Format all code with proper markdown language identifiers (e.g. \`\`\`typescript, \`\`\`python, \`\`\`tsx, \`\`\`html, \`\`\`css, \`\`\`json, \`\`\`bash).
-- Structure your response professionally:
-  1. Direct, authoritative explanation of the architecture or logic.
-  2. Full, complete, syntax-highlighted code block(s).
-  3. Brief breakdown of key technical decisions, security considerations, and step-by-step usage/testing instructions.
-- Be accurate, concise, and developer-centric.`;
+const DEFAULT_SYSTEM_INSTRUCTION = `You are Feed Forge AI, a world-class, Principal AI Software Engineer, Visual Synthesizer, and Intelligent Workspace Companion.
+- ALWAYS write 100% COMPLETE, fully functional, unbroken, and production-ready code. NEVER cut off code in the middle, never omit implementations, and NEVER use lazy placeholders.
+- DIRECT IMAGE GENERATION: Whenever the user asks to generate, create, draw, paint, or render an image, NEVER say you cannot generate images and NEVER provide boilerplate prompt text. ALWAYS directly generate and embed the visual image using markdown format:
+  ![Image Description](https://image.pollinations.ai/prompt/YOUR_URL_ENCODED_PROMPT_HERE?width=1024&height=1024&nologo=true&enhance=true)
+  Followed by a crisp breakdown of the artistic style, lighting, and composition.
+- SINGLE-BLOCK 60FPS INTERACTIVE ANIMATIONS: Whenever the user asks for an animation, interactive visualization, 3D effect, particle system, canvas simulation, game, or UI animation:
+  1. ALWAYS provide ONE SINGLE, complete, self-contained interactive HTML5 application inside a SINGLE \`\`\`html code block.
+  2. Put ALL styles in inline <style> tags and ALL JavaScript/Canvas physics in inline <script> tags inside that one block.
+  3. NEVER split the code into separate 'index.html', 'style.css', 'script.js' files. Everything must be in that single \`\`\`html code block so the live interactive animation sandbox runs it immediately!
+  4. Make it responsive, visually stunning with smooth 60fps requestAnimationFrame physics, interactive on mousemove/clicks, and beautifully styled.
+- Structure your response professionally and accurately.`;
 
 const WORKING_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-flash-lite-latest',
-  'gemini-3.1-flash-lite',
-  'gemini-3-flash-preview',
-  'gemini-3.6-flash',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
+  'gemini-2.0-flash-exp',
 ];
+
+function resolveModelCandidates(requestedModel?: string): string[] {
+  const defaults = [...WORKING_MODELS];
+  if (!requestedModel) return defaults;
+
+  let prioritized: string[] = [];
+  if (requestedModel.includes('3.6') || requestedModel.includes('pro')) {
+    prioritized = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+  } else if (requestedModel.includes('3.5') || requestedModel.includes('flash')) {
+    prioritized = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-pro', 'gemini-1.5-pro'];
+  } else {
+    prioritized = [requestedModel, ...defaults];
+  }
+
+  return Array.from(new Set([...prioritized, ...defaults]));
+}
 
 /**
  * Format conversation history into Gemini API format with strict turn alternation
@@ -81,6 +98,47 @@ function buildGeminiContents(
 }
 
 /**
+ * Resolve the optimal API key based on query intent (animation vs image vs general)
+ */
+export function resolveApiKeyForPrompt(userMessage: string, customApiKey?: string): string {
+  if (customApiKey) return customApiKey;
+
+  const lower = userMessage.toLowerCase();
+
+  // 1. Image Generation Intent -> IMAGE_API_KEY
+  if (
+    lower.includes('generate image') ||
+    lower.includes('generate an image') ||
+    lower.includes('create image') ||
+    lower.includes('create an image') ||
+    lower.startsWith('draw ') ||
+    lower.includes('draw an image') ||
+    lower.startsWith('paint ') ||
+    lower.includes('illustration of') ||
+    lower.includes('picture of') ||
+    lower.includes('photo of')
+  ) {
+    return process.env.IMAGE_API_KEY || process.env.GEMINI_API_KEY || '';
+  }
+
+  // 2. Animation & Visualization Intent -> ANIMATION_API_KEY
+  if (
+    lower.includes('animation') ||
+    lower.includes('animate') ||
+    lower.includes('video') ||
+    lower.includes('canvas simulation') ||
+    lower.includes('particle') ||
+    lower.includes('visualizer') ||
+    lower.includes('interactive visual')
+  ) {
+    return process.env.ANIMATION_API_KEY || process.env.GEMINI_API_KEY || '';
+  }
+
+  // 3. Default General Key
+  return process.env.GEMINI_API_KEY || process.env.ANIMATION_API_KEY || process.env.IMAGE_API_KEY || '';
+}
+
+/**
  * Real-time SSE Streaming Generator for Gemini
  * Tries models in priority order for maximum reliability
  */
@@ -89,18 +147,19 @@ export async function* streamFromGemini(
   history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [],
   options: StreamGeminiOptions = {}
 ): AsyncGenerator<{ text?: string; thinking?: string }, void, unknown> {
-  const apiKey = options.apiKey || process.env.GEMINI_API_KEY;
+  const apiKey = resolveApiKeyForPrompt(userMessage, options.apiKey);
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured.');
   }
 
   const requestedModel = options.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-  const modelsToTry = Array.from(new Set([requestedModel, ...WORKING_MODELS]));
+  const modelsToTry = resolveModelCandidates(requestedModel);
   const systemText = options.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION;
   const contents = buildGeminiContents(userMessage, history);
 
   let streamConnected = false;
   let lastError: Error | null = null;
+  let totalYielded = 0;
 
   for (const model of modelsToTry) {
     try {
@@ -127,7 +186,7 @@ export async function* streamFromGemini(
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg =
-          errorData?.error?.message || `Gemini API error HTTP ${response.status}`;
+          errorData?.error?.message || `Gemini API error HTTP ${response.status} on model ${model}`;
         lastError = new Error(errorMsg);
         continue; // Try next available model in chain
       }
@@ -165,6 +224,7 @@ export async function* streamFromGemini(
                 if (part.thought && typeof part.text === 'string') {
                   yield { thinking: part.text };
                 } else if (typeof part.text === 'string') {
+                  totalYielded++;
                   yield { text: part.text };
                 }
               }
@@ -173,8 +233,11 @@ export async function* streamFromGemini(
             }
           }
         }
-        streamConnected = true;
-        break; // Stream completed successfully
+
+        if (totalYielded > 0) {
+          streamConnected = true;
+          break; // Stream completed with real output
+        }
       } finally {
         reader.releaseLock();
       }
@@ -183,7 +246,7 @@ export async function* streamFromGemini(
     }
   }
 
-  if (!streamConnected && lastError) {
+  if (!streamConnected && totalYielded === 0 && lastError) {
     throw lastError;
   }
 }
@@ -196,7 +259,7 @@ export async function sendToGemini(
   history: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [],
   options: StreamGeminiOptions = {}
 ): Promise<GeminiResponse> {
-  const apiKey = options.apiKey || process.env.GEMINI_API_KEY;
+  const apiKey = resolveApiKeyForPrompt(userMessage, options.apiKey);
 
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured in .env.local.');
@@ -206,7 +269,7 @@ export async function sendToGemini(
   const systemText = options.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION;
 
   const requestedModel = options.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-  const modelsToTry = Array.from(new Set([requestedModel, ...WORKING_MODELS]));
+  const modelsToTry = resolveModelCandidates(requestedModel);
 
   let lastError: Error | null = null;
   let data: any = null;

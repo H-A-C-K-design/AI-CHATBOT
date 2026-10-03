@@ -38,7 +38,7 @@ export function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
-  const { user, getToken } = useAuth();
+  const { user, getToken, logout } = useAuth();
   const { currentPlan, openPricingModal } = usePricing();
   const router = useRouter();
   const pathname = usePathname() || '';
@@ -200,12 +200,12 @@ export function Sidebar({
 
   const handleSignOut = useCallback(async () => {
     try {
-      await signOut();
+      await logout();
       router.push('/login');
     } catch {
       // silent
     }
-  }, [router]);
+  }, [logout, router]);
 
   // Group conversations by date
   const now = new Date();
