@@ -14353,6 +14353,148 @@ html, body {
   cursor: pointer;
 }
 
+/* ============================================================
+   Interactive Animation Sandbox & Live Runner Styles
+   ============================================================ */
+.code-preview-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.code-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.code-tab-btn:hover {
+  color: #f0f6fc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.code-tab-btn.active {
+  background: #21262d;
+  color: #58a6ff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.preview-tab-badge.active {
+  color: #3fb950;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3fb950;
+  display: inline-block;
+  box-shadow: 0 0 8px #3fb950;
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.code-block-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-block-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #c9d1d9;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.code-block-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.animation-sandbox-container {
+  width: 100%;
+  height: 480px;
+  min-height: 380px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #0d1117;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  border-top: 1px solid #30363d;
+}
+
+.sandbox-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #161b22;
+  border-bottom: 1px solid #21262d;
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.sandbox-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #3fb950;
+  font-weight: 500;
+}
+
+.sandbox-status-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3fb950;
+  animation: pulse-dot 1.5s infinite;
+}
+
+.sandbox-tip {
+  color: #6e7681;
+}
+
+.animation-sandbox-iframe {
+  width: 100%;
+  flex: 1;
+  border: none;
+  background: #0d1117;
+}
+
+.code-block-wrapper.is-fullscreen .animation-sandbox-container {
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+
 
 
 

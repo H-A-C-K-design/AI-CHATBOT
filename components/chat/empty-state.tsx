@@ -26,13 +26,22 @@ interface SuggestionCard {
 
 const SUGGESTIONS: SuggestionCard[] = [
   {
+    id: 'interactive-anim',
+    icon: '✨',
+    title: 'Interactive animation',
+    subtitle: 'Generate a stunning 3D particle system or physics simulation',
+    prompt: 'Create an interactive 3D particle constellation animation on HTML5 Canvas where particles connect with glowing lines, react smoothly to mouse movements and clicks, and have glowing ambient effects.',
+    persona: 'code-engineer',
+    model: 'gemini-3.6-flash',
+  },
+  {
     id: 'write-code',
     icon: '💻',
     title: 'Write code',
     subtitle: 'Build a production-ready API or component in TypeScript',
     prompt: 'Design and write a scalable, type-safe REST API route with rate-limiting and JWT authentication in TypeScript.',
     persona: 'code-engineer',
-    model: 'gemini-3.5-flash',
+    model: 'gemini-3.6-flash',
   },
   {
     id: 'explain-concept',
@@ -41,7 +50,7 @@ const SUGGESTIONS: SuggestionCard[] = [
     subtitle: 'Deep-dive into technical concepts or complex ideas',
     prompt: 'Explain how attention mechanisms and transformer models work with a clear, step-by-step breakdown.',
     persona: 'general-assistant',
-    model: 'gemini-3.5-flash',
+    model: 'gemini-3.6-flash',
   },
   {
     id: 'analyze-doc',
@@ -50,16 +59,7 @@ const SUGGESTIONS: SuggestionCard[] = [
     subtitle: 'Evaluate software trade-offs, security, and scalability',
     prompt: 'Analyze the architectural trade-offs between microservices and modular monoliths for a high-traffic system.',
     persona: 'code-engineer',
-    model: 'gemini-3.5-flash',
-  },
-  {
-    id: 'research-topic',
-    icon: '🔍',
-    title: 'Research a topic',
-    subtitle: 'Gather deep market insights and technology trends',
-    prompt: 'Conduct a deep-dive research summary on the latest multimodal AI models, latency benchmarks, and cost efficiency.',
-    persona: 'intelligence-analyst',
-    model: 'gemini-3.5-flash',
+    model: 'gemini-3.6-flash',
   },
 ];
 
