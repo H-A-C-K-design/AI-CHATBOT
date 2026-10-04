@@ -55,7 +55,8 @@ export type AIPersonaId =
   | 'code-engineer'
   | 'intelligence-analyst'
   | 'security-critic'
-  | 'creative-strategist';
+  | 'creative-strategist'
+  | 'image-video-creator';
 
 export interface AIModelOption {
   id: AIModelId;
