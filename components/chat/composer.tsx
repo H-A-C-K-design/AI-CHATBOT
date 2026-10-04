@@ -205,6 +205,11 @@ export function Composer({
   );
 
   const handleSelectPersona = useCallback((newPersona: AIPersonaId) => {
+    if (newPersona === 'image-video-creator') {
+      window.open('https://aividandimg.vercel.app/', '_blank');
+      setIsPersonaMenuOpen(false);
+      return;
+    }
     setPersona(newPersona);
     setIsPersonaMenuOpen(false);
   }, []);
